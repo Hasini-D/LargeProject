@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const app_name = 'fitjourneyhome.com';
 
 function buildPath(route: string): string {
     if (process.env.NODE_ENV !== 'development') {
-        return 'http://' + app_name + ':5001/' + route;
+        return 'https://' + app_name + '/' + route;
     } else {
         return 'http://localhost:5001/' + route;
     }
@@ -14,6 +15,7 @@ function Login() {
     const [loginName, setLoginName] = useState('');
     const [loginPassword, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
     function handleSetLoginName(e: any): void {
         setLoginName(e.target.value);
@@ -60,6 +62,10 @@ function Login() {
         }
     }
 
+    function goToRegister() {
+        navigate('/register');
+    }
+
     return (
         <div id="loginDiv">
             <span id="inner-title">PLEASE LOG IN</span><br />
@@ -68,6 +74,8 @@ function Login() {
             <input type="submit" id="loginButton" className="buttons" value="Do It" onClick={doLogin} />
             <br />
             <span id="loginResult">{message}</span>
+            <br />
+            <button type="button" id="registerButton" className="buttons" onClick={goToRegister}>Register</button>
         </div>
     );
 }
