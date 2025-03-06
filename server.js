@@ -24,6 +24,9 @@ const db = client.db("sample_mflix");
 
 // Register Endpoint
 app.post('/api/register', async (req, res) => {
+    console.log("Received request");
+    console.log("Request body", req.body);
+    res.status(200).json({ messgae: "User added!" });
     const { firstName, lastName, email, login, password } = req.body;
     try {
         console.log('Register request received:', { firstName, lastName, email, login, password });

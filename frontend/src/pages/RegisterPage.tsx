@@ -1,4 +1,4 @@
-import Register from '../components/register.tsx';
+import Register from '../components/Register.tsx';
 
 function RegisterPage() {
   return (
