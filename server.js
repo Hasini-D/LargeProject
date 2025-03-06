@@ -26,7 +26,7 @@ const db = client.db("sample_mflix");
 app.post('/api/register', async (req, res) => {
     console.log("Received request");
     console.log("Request body", req.body);
-    res.status(200).json({ messgae: "User added!" });
+    //res.status(200).json({ messgae: "User is added" });
     const { firstName, lastName, email, login, password } = req.body;
     try {
         console.log('Register request received:', { firstName, lastName, email, login, password });
@@ -43,7 +43,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const result = await db.collection('users').insertOne({ firstName, lastName, email, login, password });
-        res.status(200).json({ error: '' });
+        res.status(200).json({ message: "User is added!", error: '' });
     } catch (error) {
         console.error('Error during registration:', error);
         res.status(500).json({ error: error.message });
