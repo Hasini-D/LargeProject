@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const app_name = 'fitjourneyhome.com';
 
-function buildPath(route:string): string {
+function buildPath(route: string): string {
     if (process.env.NODE_ENV !== 'development') {
         return 'http://' + app_name + ':5001/' + route;
     } else {
@@ -35,6 +35,15 @@ function Login() {
                 headers: { 'Content-Type': 'application/json' },
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Received non-JSON response");
+            }
+
             const res = await response.json();
 
             if (res.id <= 0) {
@@ -47,7 +56,7 @@ function Login() {
                 window.location.href = '/cards';
             }
         } catch (error: any) {
-            alert(error.toString());
+            setMessage(error.toString());
         }
     }
 

@@ -2,14 +2,13 @@ import { useState } from 'react';
 
 const app_name = 'fitjourneyhome.com';
 
-function buildPath(route:string): string {
+function buildPath(route: string): string {
     if (process.env.NODE_ENV !== 'development') {
-        return 'http://' + app_name + ':5001/' + route;
+        return 'http://' + app_name + '/' + route;
     } else {
         return 'http://localhost:5001/' + route;
     }
 }
-
 
 function CardUI() {
     let _ud: any = localStorage.getItem('user_data');
@@ -42,6 +41,15 @@ function CardUI() {
                 headers: { 'Content-Type': 'application/json' },
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Received non-JSON response");
+            }
+
             let res = await response.json();
             if (res.error.length > 0) {
                 setMessage("API Error: " + res.error);
@@ -64,6 +72,15 @@ function CardUI() {
                 body: js,
                 headers: { 'Content-Type': 'application/json' },
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Received non-JSON response");
+            }
 
             let res = await response.json();
             let resultText = res.results.join(', ');

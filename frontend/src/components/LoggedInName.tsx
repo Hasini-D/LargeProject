@@ -1,20 +1,19 @@
-function LoggedInName()
-{
-    //var user={}
+import { useNavigate } from 'react-router-dom';
 
-    function doLogout(event:any) : void
-    {
-        event.preventDefault();
-        alert('doLogout');  
-    };
+function LoggedInName() {
+    const navigate = useNavigate();
 
-    return(
+    function doLogout() {
+        localStorage.removeItem('user_data');
+        navigate('/login');
+    }
+
+    return (
         <div id="loggedInDiv">
             <span id="userName">Logged In As John Doe </span><br />
-            <button type="button" id="logoutButton" className="buttons"
-                onClick={doLogout}> Log Out </button>
+            <button type="button" id="logoutButton" className="buttons" onClick={doLogout}> Log Out </button>
         </div>
     );
-};
+}
 
 export default LoggedInName;
