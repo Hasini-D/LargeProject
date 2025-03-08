@@ -1,16 +1,10 @@
 import { useState } from 'react';
+import { buildPath } from './Path';
 
 const app_name = 'fitjourneyhome.com';
 
-function buildPath(route: string): string {
-    if (process.env.NODE_ENV !== 'development') {
-        return 'http://' + app_name + '/' + route;
-    } else {
-        return 'http://localhost:5001/' + route;
-    }
-}
-
 function CardUI() {
+    //var bp = require('./Path.js'); //Added build path
     let _ud: any = localStorage.getItem('user_data');
     let ud = JSON.parse(_ud);
     let userId: string = ud?.id || '';
@@ -35,11 +29,15 @@ function CardUI() {
         let js = JSON.stringify(obj);
 
         try {
+            // New code for fetch
             const response = await fetch(buildPath('api/addcard'), {
                 method: 'POST',
-                body: js,
-                headers: { 'Content-Type': 'application/json' },
+                body: js, // Ensure `js` is properly stringified
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
+            
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -67,11 +65,15 @@ function CardUI() {
         let js = JSON.stringify(obj);
 
         try {
+            //New code for fetch
             const response = await fetch(buildPath('api/searchcards'), {
                 method: 'POST',
-                body: js,
-                headers: { 'Content-Type': 'application/json' },
+                body: js, // Ensure `js` is properly stringified
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
+            
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
