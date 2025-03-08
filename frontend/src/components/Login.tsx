@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buildPath } from './Path';
 
 const app_name = 'fitjourneyhome.com';
 
-function buildPath(route: string): string {
-    if (process.env.NODE_ENV !== 'development') {
-        return 'https://' + app_name + '/' + route;
-    } else {
-        return 'http://localhost:5001/' + route;
-    }
-}
-
 function Login() {
+    
+    //var bp = require('./Path.js');
+    
+    
     const [loginName, setLoginName] = useState('');
     const [loginPassword, setPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -31,11 +28,15 @@ function Login() {
         const js = JSON.stringify(obj);
 
         try {
+            // New code for fetch
             const response = await fetch(buildPath('api/login'), {
                 method: 'POST',
-                body: js,
-                headers: { 'Content-Type': 'application/json' },
+                body: js, // Ensure `js` is properly stringified
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
+            
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
