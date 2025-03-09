@@ -2,7 +2,7 @@ require('express');
 require('mongodb');
 exports.setApp = function ( app, client ){
 
-    const db = client.db('MERNDatabase');
+    const db = client.db("sample_mflix");
 
     app.post('/api/register', async (req, res) => {
         console.log("Received request");
