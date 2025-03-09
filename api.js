@@ -7,27 +7,27 @@ exports.setApp = function ( app, client ){
     app.post('/api/register', async (req, res) => {
         console.log("Received request");
         console.log("Request body", req.body);
-        //res.status(200).json({ messgae: "User is added" });
+    
         const { firstName, lastName, email, login, password } = req.body;
         try {
             console.log('Register request received:', { firstName, lastName, email, login, password });
+    
             const existingUser = await db.collection('users').findOne({ login: login });
             if (existingUser) {
-                res.status(400).json({ error: 'Username already exists' });
-                return;
+                return res.status(400).json({ error: 'Username already exists' }); // Use return to prevent duplicate response
             }
     
             const existingEmail = await db.collection('users').findOne({ email: email });
             if (existingEmail) {
-                res.status(400).json({ error: 'Email already exists' });
-                return;
+                return res.status(400).json({ error: 'Email already exists' }); // Use return
             }
     
             const result = await db.collection('users').insertOne({ firstName, lastName, email, login, password });
-            res.status(200).json({ message: "User is added!", error: '' });
+            return res.status(200).json({ message: "User is added!", error: '' });
+    
         } catch (error) {
             console.error('Error during registration:', error);
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         }
     });
     
