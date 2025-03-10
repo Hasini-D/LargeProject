@@ -28,7 +28,7 @@ exports.setApp = function ( app, client ){
         } catch (error) {
             console.error('Error during registration:', error);
             return res.status(500).json({ error: error.message });
-        }
+        }// test
     });
     
     // Login Endpoint
