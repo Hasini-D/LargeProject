@@ -34,11 +34,20 @@ exports.setApp = function ( app, client ){
     // Login Endpoint
     app.post('/api/login', async (req, res) => {
         const { login, password } = req.body;
+        console.log('Login request received:', { login, password });
         try {
-            console.log('Login request received:', { login, password });
             const user = await db.collection('users').findOne({ login: login });
             if (user && user.password === password) {
-                res.status(200).json({ id: user._id, firstName: user.firstName, lastName: user.lastName, error: '' });
+                // User authenticated: generate JWT token.
+                const tokenModule = require("./createJWT.js");
+                let jwtResponse;
+                try {
+                    // Pass firstName, lastName, and id to createToken.
+                    jwtResponse = tokenModule.createToken(user.firstName, user.lastName, user._id);
+                } catch (tokenError) {
+                    jwtResponse = { error: tokenError.message };
+                }
+                res.status(200).json(jwtResponse);
             } else {
                 res.status(401).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username or password' });
             }
@@ -48,29 +57,79 @@ exports.setApp = function ( app, client ){
         }
     });
     
+    
     // Add Card Endpoint
     app.post('/api/addcard', async (req, res) => {
-        const { userId, card } = req.body;
+        // incoming: userId, card, jwtToken
+        const { userId, card, jwtToken } = req.body;
+        const tokenModule = require("./createJWT.js");
+    
+        // Check if the token is expired
         try {
-            console.log('Add card request received:', { userId, card });
-            const result = await db.collection('cards').insertOne({ userId, card });
-            res.status(200).json({ error: '' });
-        } catch (error) {
-            console.error('Error during add card:', error);
-            res.status(500).json({ error: error.message });
+            if (tokenModule.isExpired(jwtToken)) {
+                return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: '' });
+            }
+        } catch (e) {
+            console.log(e.message);
         }
+    
+        // Process the card addition
+        const newCard = { Card: card, UserId: userId };
+        let error = '';
+        try {
+            await db.collection('cards').insertOne(newCard);
+        } catch (e) {
+            error = e.toString();
+        }
+    
+        // Refresh the JWT
+        let refreshedToken = null;
+        try {
+            refreshedToken = tokenModule.refresh(jwtToken);
+        } catch (e) {
+            console.log(e.message);
+        }
+    
+        res.status(200).json({ error: error, jwtToken: refreshedToken });
     });
+    
     
     // Search Cards Endpoint
     app.post('/api/searchcards', async (req, res) => {
-        const { userId, search } = req.body;
+        // incoming: userId, search, jwtToken
+        const { userId, search, jwtToken } = req.body;
+        const tokenModule = require("./createJWT.js");
+    
+        // Check if the token is expired
         try {
-            console.log('Search cards request received:', { userId, search });
-            const results = await db.collection('cards').find({ userId, card: { $regex: search, $options: 'i' } }).toArray();
-            res.status(200).json({ results: results.map(result => result.card), error: '' });
-        } catch (error) {
-            console.error('Error during search cards:', error);
-            res.status(500).json({ error: error.message });
+            if (tokenModule.isExpired(jwtToken)) {
+                return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: '' });
+            }
+        } catch (e) {
+            console.log(e.message);
         }
+    
+        let error = '';
+        const _search = search.trim();
+        let results = [];
+        try {
+            results = await db.collection('cards').find({ "Card": { $regex: _search + '.*', $options: 'i' } }).toArray();
+        } catch (e) {
+            error = e.toString();
+        }
+    
+        // Format the results: extract the "Card" property from each result.
+        let _ret = results.map(item => item.Card);
+    
+        // Refresh the JWT
+        let refreshedToken = null;
+        try {
+            refreshedToken = tokenModule.refresh(jwtToken);
+        } catch (e) {
+            console.log(e.message);
+        }
+    
+        res.status(200).json({ results: _ret, error: error, jwtToken: refreshedToken });
     });
+    
 }
