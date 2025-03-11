@@ -5,8 +5,8 @@ exports.setApp = function ( app, client ){
     const db = client.db("sample_mflix");
 
     app.post('/api/register', async (req, res) => {
-        console.log("Received request");
-        console.log("Request body", req.body);
+        //console.log("Received request");
+        //console.log("Request body", req.body);
     
         const { firstName, lastName, email, login, password } = req.body;
         try {
