@@ -5,6 +5,12 @@ const cors = require('cors');
 const { MongoClient } = require('mongodb');
 
 const app = express();
+const port = 5001; // ensure this is the port you're trying to access
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+
 app.use(cors()); // Enable CORS
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
