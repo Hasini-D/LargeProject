@@ -59,77 +59,82 @@ exports.setApp = function ( app, client ){
     
     
     // Add Card Endpoint
-    app.post('/api/addcard', async (req, res) => {
-        // incoming: userId, card, jwtToken
-        const { userId, card, jwtToken } = req.body;
-        const tokenModule = require("./createJWT.js");
-    
-        // Check if the token is expired
-        try {
-            if (tokenModule.isExpired(jwtToken)) {
-                return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: '' });
-            }
-        } catch (e) {
-            console.log(e.message);
+// Add Card Endpoint
+app.post('/api/addcard', async (req, res) => {
+    // incoming: userId, card, jwtToken
+    const { userId, card, jwtToken } = req.body;
+    const tokenModule = require("./createJWT.js");
+
+    // Check if the token is expired
+    try {
+        if (tokenModule.isExpired(jwtToken)) {
+            let refreshedToken = tokenModule.refresh(jwtToken); // Refresh the token
+            return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: refreshedToken });
         }
-    
-        // Process the card addition
-        const newCard = { Card: card, UserId: userId };
-        let error = '';
-        try {
-            await db.collection('cards').insertOne(newCard);
-        } catch (e) {
-            error = e.toString();
+    } catch (e) {
+        console.log(e.message);
+    }
+
+    // Process the card addition
+    const newCard = { Card: card, UserId: userId };
+    let error = '';
+    try {
+        await db.collection('cards').insertOne(newCard);
+    } catch (e) {
+        error = e.toString();
+    }
+
+    // Refresh the JWT
+    let refreshedToken = null;
+    try {
+        refreshedToken = tokenModule.refresh(jwtToken);
+    } catch (e) {
+        console.log(e.message);
+    }
+
+    res.status(200).json({ error: error, jwtToken: refreshedToken });
+});
+
+// Search Cards Endpoint
+app.post('/api/searchcards', async (req, res) => {
+    // incoming: userId, search, jwtToken
+    const { userId, search, jwtToken } = req.body;
+    const tokenModule = require("./createJWT.js");
+
+    // Check if the token is expired
+    try {
+        if (tokenModule.isExpired(jwtToken)) {
+            let refreshedToken = tokenModule.refresh(jwtToken); // Refresh the token
+            return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: refreshedToken });
         }
-    
-        // Refresh the JWT
-        let refreshedToken = null;
-        try {
-            refreshedToken = tokenModule.refresh(jwtToken);
-        } catch (e) {
-            console.log(e.message);
-        }
-    
-        res.status(200).json({ error: error, jwtToken: refreshedToken });
-    });
-    
-    
-    // Search Cards Endpoint
-    app.post('/api/searchcards', async (req, res) => {
-        // incoming: userId, search, jwtToken
-        const { userId, search, jwtToken } = req.body;
-        const tokenModule = require("./createJWT.js");
-    
-        // Check if the token is expired
-        try {
-            if (tokenModule.isExpired(jwtToken)) {
-                return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: '' });
-            }
-        } catch (e) {
-            console.log(e.message);
-        }
-    
-        let error = '';
-        const _search = search.trim();
-        let results = [];
-        try {
-            results = await db.collection('cards').find({ "Card": { $regex: _search + '.*', $options: 'i' } }).toArray();
-        } catch (e) {
-            error = e.toString();
-        }
-    
-        // Format the results: extract the "Card" property from each result.
-        let _ret = results.map(item => item.Card);
-    
-        // Refresh the JWT
-        let refreshedToken = null;
-        try {
-            refreshedToken = tokenModule.refresh(jwtToken);
-        } catch (e) {
-            console.log(e.message);
-        }
-    
-        res.status(200).json({ results: _ret, error: error, jwtToken: refreshedToken });
-    });
+    } catch (e) {
+        console.log(e.message);
+    }
+
+    let error = '';
+    const _search = search.trim();
+    let results = [];
+    try {
+        results = await db.collection('cards').find({ "Card": { $regex: _search + '.*', $options: 'i' } }).toArray();
+    } catch (e) {
+        error = e.toString();
+    }
+
+    // Format the results: extract the "Card" property from each result.
+    let _ret = results.map(item => item.Card);
+
+    // Refresh the JWT
+    let refreshedToken = null;
+    try {
+        refreshedToken = tokenModule.refresh(jwtToken);
+    } catch (e) {
+        console.log(e.message);
+    }
+
+    res.status(200).json({ results: _ret, error: error, jwtToken: refreshedToken });
+});
+
+
+
     
 }
