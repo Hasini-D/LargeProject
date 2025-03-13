@@ -1,14 +1,21 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const jwt = require("jsonwebtoken");
+require("dotenv").config(); // Load env variables
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "yourSecretKey";
 
+// 🔹 Function to create JWT token
+exports.createToken = function (firstName, lastName, userId) {
+    console.log("Creating JWT for:", { firstName, lastName, userId });
 
-function createToken(firstName, lastName, userId) {
-    const payload = { firstName, lastName, userId };
-    const secret = process.env.JWT_SECRET || 'yourSecret'; // Secret should be in .env for security
-    const options = { expiresIn: '1h' };
+    try {
+        const token = jwt.sign(
+            { userId, firstName, lastName },
+            ACCESS_TOKEN_SECRET,
+            { expiresIn: "1h" }
+        );
 
-    // Create and return the JWT
-    return jwt.sign(payload, secret, options);
-}
-
-module.exports = { createToken };
+        return { accessToken: token };
+    } catch (error) {
+        console.error("Error generating JWT:", error);
+        return { error: error.message };
+    }
+};
