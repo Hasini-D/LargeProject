@@ -27,47 +27,39 @@ exports.setApp = function (app, client) {
         }
     });
 
-    // Login Endpoint
-    app.post('/api/login', async (req, res) => {
-        const { login, password } = req.body;
-        console.log('Login request received:', { login, password });
-    
-        try {
-            const user = await db.collection('users').findOne({ login: login });
-            
-            // Check if the user exists and if the password matches
-            if (user && user.password === password) {
-                console.log('User authenticated:', user);
-    
-                // Generate JWT token
-                const tokenModule = require("./createJWT.js");
-                let jwtResponse;
-                try {
-                    console.log('Token creation initiated...');
-                    jwtResponse = tokenModule.createToken(user.firstName, user.lastName, user._id);
-                    console.log('Token created:', jwtResponse); // This should log the JWT token
-                } catch (tokenError) {
-                    console.error('Error creating token:', tokenError.message);
-                    return res.status(500).json({ error: 'Token creation failed' });
-                }
-                
-                // Return the JWT token if it was successfully created
-                if (jwtResponse && jwtResponse !== '') {
-                    console.log('Returning JWT token to client');
-                    return res.status(200).json({ token: jwtResponse });
-                } else {
-                    console.log('JWT token creation failed');
-                    return res.status(500).json({ error: 'Token creation failed' });
-                }
-            } else {
-                console.log('Invalid credentials');
-                return res.status(401).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username or password' });
-            }
-        } catch (error) {
-            console.error('Error during login:', error);
-            return res.status(500).json({ error: error.message });
+    const jwt = require("jsonwebtoken");
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "yourSecretKey";
+
+app.post('/api/login', async (req, res) => {
+    const { login, password } = req.body;
+
+    try {
+        const user = await db.collection('users').findOne({ login: login });
+
+        if (user && user.password === password) {
+            // Generate JWT token
+            const token = jwt.sign(
+                { userId: user._id, firstName: user.firstName, lastName: user.lastName },
+                ACCESS_TOKEN_SECRET,
+                { expiresIn: "1h" }
+            );
+
+            // Send user data + token in response
+            res.status(200).json({
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                accessToken: token // THIS IS MISSING IN YOUR CURRENT RESPONSE
+            });
+        } else {
+            res.status(401).json({ error: "Invalid username or password" });
         }
-    });
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
     
     
 
