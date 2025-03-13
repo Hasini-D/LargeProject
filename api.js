@@ -28,34 +28,41 @@ exports.setApp = function (app, client) {
     });
 
     // Login Endpoint
-    // Login Endpoint
-app.post('/api/login', async (req, res) => {
-    const { login, password } = req.body;
-    console.log('Login request received:', { login, password });
-    try {
-        const user = await db.collection('users').findOne({ login: login });
-        if (user && user.password === password) {
-            // User authenticated: generate JWT token.
-            const tokenModule = require("./createJWT.js");
-            let jwtResponse;
-            try {
-                // Pass firstName, lastName, and id to createToken.
-                console.log('Token creation initiated...');
-                jwtResponse = tokenModule.createToken(user.firstName, user.lastName, user._id);
-                console.log('Token created:', jwtResponse);
-            } catch (tokenError) {
-                jwtResponse = { error: tokenError.message };
-                console.error('Error creating token:', tokenError.message);
+    app.post('/api/login', async (req, res) => {
+        const { login, password } = req.body;
+        console.log('Login request received:', { login, password });
+    
+        try {
+            const user = await db.collection('users').findOne({ login: login });
+            if (user && user.password === password) {
+                // User authenticated: generate JWT token.
+                const tokenModule = require("./createJWT.js");
+                let jwtResponse;
+                try {
+                    // Pass firstName, lastName, and id to createToken.
+                    console.log('Token creation initiated...');
+                    jwtResponse = tokenModule.createToken(user.firstName, user.lastName, user._id);
+                    console.log('Token created:', jwtResponse);  // Ensure this is the token string
+                } catch (tokenError) {
+                    console.error('Error creating token:', tokenError.message);
+                    return res.status(500).json({ error: 'Token creation failed' });
+                }
+                
+                // Ensure we are sending the correct token in the response
+                if (jwtResponse && jwtResponse !== '') {
+                    return res.status(200).json({ token: jwtResponse });  // Return the actual token
+                } else {
+                    return res.status(500).json({ error: 'Token creation failed' });
+                }
+            } else {
+                return res.status(401).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username or password' });
             }
-            return res.status(200).json({ token: jwtResponse }); // This line ensures the token is returned
-        } else {
-            return res.status(401).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username or password' });
+        } catch (error) {
+            console.error('Error during login:', error);
+            return res.status(500).json({ error: error.message });
         }
-    } catch (error) {
-        console.error('Error during login:', error);
-        return res.status(500).json({ error: error.message });
-    }
-});
+    });
+    
 
 
     // Add Card Endpoint
