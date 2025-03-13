@@ -4,7 +4,7 @@ const app_name = 'fitjourneyhome.com';
 
 function buildPath(route: string): string {
     if (process.env.NODE_ENV !== 'development') {
-        return 'https://' + app_name + '/' + route;
+        return 'http://' + app_name + '/' + route;
     } else {
         return 'http://localhost:5001/' + route;
     }
