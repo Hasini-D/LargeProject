@@ -1,7 +1,13 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const { MongoClient } = require('mongodb');
+const cors = require('cors');
+
+app.use(cors({
+  origin: ["http://fitjourneyhome.com", "http://localhost:5001"], // Allow your frontend
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: "Content-Type, Authorization"
+}));
 
 const app = express();
 const port = 5001; // ensure this is the port you're trying to access
