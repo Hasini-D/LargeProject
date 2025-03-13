@@ -34,27 +34,33 @@ exports.setApp = function (app, client) {
     
         try {
             const user = await db.collection('users').findOne({ login: login });
+            
+            // Check if the user exists and if the password matches
             if (user && user.password === password) {
-                // User authenticated: generate JWT token.
+                console.log('User authenticated:', user);
+    
+                // Generate JWT token
                 const tokenModule = require("./createJWT.js");
                 let jwtResponse;
                 try {
-                    // Pass firstName, lastName, and id to createToken.
                     console.log('Token creation initiated...');
                     jwtResponse = tokenModule.createToken(user.firstName, user.lastName, user._id);
-                    console.log('Token created:', jwtResponse);  // Ensure this is the token string
+                    console.log('Token created:', jwtResponse); // This should log the JWT token
                 } catch (tokenError) {
                     console.error('Error creating token:', tokenError.message);
                     return res.status(500).json({ error: 'Token creation failed' });
                 }
                 
-                // Ensure we are sending the correct token in the response
+                // Return the JWT token if it was successfully created
                 if (jwtResponse && jwtResponse !== '') {
-                    return res.status(200).json({ token: jwtResponse });  // Return the actual token
+                    console.log('Returning JWT token to client');
+                    return res.status(200).json({ token: jwtResponse });
                 } else {
+                    console.log('JWT token creation failed');
                     return res.status(500).json({ error: 'Token creation failed' });
                 }
             } else {
+                console.log('Invalid credentials');
                 return res.status(401).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username or password' });
             }
         } catch (error) {
@@ -62,6 +68,7 @@ exports.setApp = function (app, client) {
             return res.status(500).json({ error: error.message });
         }
     });
+    
     
 
 
