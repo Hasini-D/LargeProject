@@ -29,6 +29,8 @@ function Login() {
     const js = JSON.stringify(obj);
 
     try {
+      console.log("Making request to:", buildPath('api/login'));
+
       const response = await fetch(buildPath('api/login'), {
         method: 'POST',
         body: js,
