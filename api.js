@@ -1,5 +1,7 @@
 require('express');
 require('mongodb');
+require("dotenv").config();
+console.log("ACCESS_TOKEN_SECRET:", process.env.ACCESS_TOKEN_SECRET);
 
 exports.setApp = function (app, client) {
     const db = client.db("sample_mflix");
@@ -27,7 +29,7 @@ exports.setApp = function (app, client) {
         }
     });
 
-    const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "yourSecretKey";
 
 app.post('/api/login', async (req, res) => {
