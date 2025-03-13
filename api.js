@@ -1,7 +1,6 @@
 require('express');
 require('mongodb');
-require("dotenv").config();
-console.log("ACCESS_TOKEN_SECRET:", process.env.ACCESS_TOKEN_SECRET);
+
 
 exports.setApp = function (app, client) {
     const db = client.db("sample_mflix");
@@ -30,37 +29,71 @@ exports.setApp = function (app, client) {
     });
 
 const jwt = require("jsonwebtoken");
+require("dotenv").config(); // Ensure environment variables are loaded
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "yourSecretKey";
 
 app.post('/api/login', async (req, res) => {
     const { login, password } = req.body;
+    console.log("Login request received:", { login, password });
 
     try {
         const user = await db.collection('users').findOne({ login: login });
 
-        if (user && user.password === password) {
-            // Generate JWT token
-            const token = jwt.sign(
+        if (!user) {
+            console.log("User not found");
+            return res.status(401).json({ error: "Invalid username or password" });
+        }
+
+        if (user.password !== password) {
+            console.log("Incorrect password");
+            return res.status(401).json({ error: "Invalid username or password" });
+        }
+
+        console.log("User found:", user);
+
+        // Debug: Check if SECRET is properly loaded
+        console.log("ACCESS_TOKEN_SECRET:", ACCESS_TOKEN_SECRET);
+        if (!ACCESS_TOKEN_SECRET) {
+            console.error("JWT Secret is missing!");
+            return res.status(500).json({ error: "Server misconfiguration: Missing JWT Secret" });
+        }
+
+        // Generate JWT token
+        let token;
+        try {
+            token = jwt.sign(
                 { userId: user._id, firstName: user.firstName, lastName: user.lastName },
                 ACCESS_TOKEN_SECRET,
                 { expiresIn: "1h" }
             );
-
-            // Send user data + token in response
-            res.status(200).json({
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                accessToken: token // THIS IS MISSING IN YOUR CURRENT RESPONSE
-            });
-        } else {
-            res.status(401).json({ error: "Invalid username or password" });
+            console.log("Generated Token:", token);
+        } catch (jwtError) {
+            console.error("JWT Error:", jwtError);
+            return res.status(500).json({ error: "JWT generation failed" });
         }
+
+        // Debug: Show full response being sent
+        console.log("Sending response:", {
+            id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            accessToken: token
+        });
+
+        // Send user data + token in response
+        res.status(200).json({
+            id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            accessToken: token
+        });
+
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ error: error.message });
     }
 });
+
 
     
     
