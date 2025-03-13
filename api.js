@@ -47,15 +47,23 @@ exports.setApp = function ( app, client ){
                 } catch (tokenError) {
                     jwtResponse = { error: tokenError.message };
                 }
-                res.status(200).json(jwtResponse);
+                // Include the JWT in the response
+                res.status(200).json({
+                    id: user._id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    jwtToken: jwtResponse.token, // Send the token back
+                    error: ''
+                });
             } else {
-                res.status(401).json({ id: -1, firstName: '', lastName: '', error: 'Invalid username or password' });
+                res.status(401).json({ error: 'Invalid username or password' });
             }
         } catch (error) {
             console.error('Error during login:', error);
             res.status(500).json({ error: error.message });
         }
     });
+    
     
     
     // Add Card Endpoint

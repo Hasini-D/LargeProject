@@ -1,20 +1,10 @@
 require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
 
 const app = express();
 const port = 5001; // ensure this is the port you're trying to access
-
-app.listen(port, '0.0.0.0',() => {
-  console.log(`Server running on http://localhost:${port}`);
-});
-
-app.use(cors()); // Enable CORS
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
 
 // MongoDB Connection
 const url = process.env.MONGO_URI;
@@ -29,14 +19,21 @@ client.connect()
 
 const db = client.db("sample_mflix");
 
-//Mern C requirement
+// Middleware
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Body parser for JSON requests
+
+// Logging middleware to track all incoming requests
+app.use((req, res, next) => {
+    console.log(`Received request: ${req.method} ${req.url}`);
+    next();
+});
+
+// Import API routes
 var api = require('./api.js');
-api.setApp( app, client );
-
-
-
+api.setApp(app, client);
 
 // Start Server
-//const PORT = 5001;
-//app.listen(PORT, () => console.log(`Server running on port ${PORT}`));// triggering ci/cd pipeline
-//Now this port is removed
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on http://localhost:${port}`);
+});
