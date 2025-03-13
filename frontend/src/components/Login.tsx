@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
-import { jwtDecode } from 'jwt-decode';
+//import { jwtDecode } from 'jwt-decode';
 
-interface DecodedToken {
-  firstName: string;
-  lastName: string;
-  userId: string; // adjust type if necessary
-}
+
 
 function Login() {
   const [loginName, setLoginName] = useState('');
@@ -54,26 +50,17 @@ function Login() {
       if (res.error) {
         setMessage('User/Password combination incorrect');
       } else {
-        // Decode the token using jwt-decode (a plain function, not a hook)
-        const decodedToken = jwtDecode<DecodedToken>(res.accessToken);
-        if (!decodedToken) {
-          setMessage('Error decoding token');
-          return;
-        }
         const user = { 
-          firstName: decodedToken.firstName, 
-          lastName: decodedToken.lastName, 
-          id: decodedToken.userId 
+          firstName: res.firstName, 
+          lastName: res.lastName, 
+          id: res.id 
         };
+        
         
         // Store user data in localStorage
         localStorage.setItem('user_data', JSON.stringify(user));
 
-        // Store the JWT token in localStorage
-        if (res.accessToken) {
-          localStorage.setItem('token_data', res.accessToken);
-          console.log('JWT Token stored in localStorage:', res.accessToken);  // Add this line to log the token
-        }
+       
 
         setMessage('Login successful!');
         window.location.href = '/cards';

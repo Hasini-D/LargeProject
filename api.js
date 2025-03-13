@@ -30,45 +30,38 @@ exports.setApp = function (app, client) {
 
     
     
-    const tokenModule = require("./createJWT.js"); // Import JWT handling module
-
-app.post('/api/login', async (req, res) => {
-    const { login, password } = req.body;
-    console.log('Login request received:', { login, password });
-
-    try {
-        const user = await db.collection('users').findOne({ login: login });
-
-        if (!user) {
-            console.log("User not found");
-            return res.status(401).json({ error: "Invalid username or password" });
-        }
-
-        if (user.password !== password) {
-            console.log("Incorrect password");
-            return res.status(401).json({ error: "Invalid username or password" });
-        }
-
-        console.log("User found:", user);
-
-        // 🔹 Create JWT token using the external module
-        let jwtResponse;
+    app.post('/api/login', async (req, res) => {
+        const { login, password } = req.body;
+        console.log('Login request received:', { login, password });
+    
         try {
-            jwtResponse = tokenModule.createToken(user.firstName, user.lastName, user._id.toString());
-            console.log("Generated JWT:", jwtResponse);
-        } catch (tokenError) {
-            console.error("JWT Error:", tokenError);
-            jwtResponse = { error: tokenError.message };
+            const user = await db.collection('users').findOne({ login: login });
+    
+            if (!user) {
+                console.log("User not found");
+                return res.status(401).json({ error: "Invalid username or password" });
+            }
+    
+            if (user.password !== password) {
+                console.log("Incorrect password");
+                return res.status(401).json({ error: "Invalid username or password" });
+            }
+    
+            console.log("User found:", user);
+    
+            // ✅ Return user data WITHOUT a JWT token
+            res.status(200).json({
+                id: user._id.toString(),
+                firstName: user.firstName,
+                lastName: user.lastName
+            });
+    
+        } catch (error) {
+            console.error("Login error:", error);
+            res.status(500).json({ error: error.message });
         }
-
-        // 🔹 Ensure the response includes the token
-        res.status(200).json(jwtResponse);
-
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
+    });
+    
 
 
 
