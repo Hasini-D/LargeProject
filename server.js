@@ -7,7 +7,7 @@ const { MongoClient } = require('mongodb');
 const app = express();
 const port = 5001; // ensure this is the port you're trying to access
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0',() => {
   console.log(`Server running on http://localhost:${port}`);
 });
 
