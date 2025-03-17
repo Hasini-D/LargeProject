@@ -63,7 +63,7 @@ function Login() {
        
 
         setMessage('Login successful!');
-        window.location.href = '/cards';
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
       setMessage(error.toString());
