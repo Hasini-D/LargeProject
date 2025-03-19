@@ -5,7 +5,6 @@ const DashboardPage = () =>
     {
         return(
         <div>
-            <PageTitle />
             <DashBoardUI />
         </div>
         );
