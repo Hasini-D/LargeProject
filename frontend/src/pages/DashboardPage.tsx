@@ -3,9 +3,9 @@ import DashBoardUI from '../components/DashBoardUI';
 const DashboardPage = () =>
     {
         return(
-        <div>
-            <DashBoardUI />
-        </div>
+            <div>
+                <DashBoardUI />
+            </div>
         );
     };
     

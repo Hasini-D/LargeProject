@@ -1,13 +1,14 @@
 import IconUI from "./IconsUI";
 
-function DashboardUI() {
-   
+function DietUI() {
+
     return (
         <div className="h-screen bg-white flex flex-col">
             {/* Top Bar */}
-           <IconUI/>
+            <IconUI/>
+            <h1>Diet</h1>
         </div>
     );
 }
 
-export default DashboardUI;
+export default DietUI;  

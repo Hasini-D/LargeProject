@@ -1,13 +1,14 @@
 import IconUI from "./IconsUI";
 
-function DashboardUI() {
-   
+function FriendsUI() {
+
     return (
         <div className="h-screen bg-white flex flex-col">
             {/* Top Bar */}
-           <IconUI/>
+            <IconUI/>
+            <h1>Friends</h1>
         </div>
     );
 }
 
-export default DashboardUI;
+export default FriendsUI;
