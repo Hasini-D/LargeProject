@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { buildPath } from './Path';
-import { storeToken, retrieveToken } from '../tokenStorage';
 
 function CardUI() {
-  // Retrieve user data from localStorage.
   const _ud: string | null = localStorage.getItem('user_data');
   if (!_ud) {
     throw new Error("User data not found in localStorage");
@@ -27,25 +25,15 @@ function CardUI() {
 
   async function addCard(e: React.MouseEvent<HTMLButtonElement>): Promise<void> {
     e.preventDefault();
-    // Retrieve the JWT token from storage
-    let jwtToken = retrieveToken();
-    console.log("Using token for addCard:", jwtToken);
 
-    if (!jwtToken) {
-      setMessage("JWT Token is missing. Please log in again.");
-      return;
-    }
-
-    const obj = { userId: userId, card: card, jwtToken: jwtToken };
+    const obj = { userId: userId, card: card };
     const js = JSON.stringify(obj);
 
     try {
       const response = await fetch(buildPath('api/addcard'), {
         method: 'POST',
         body: js,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const res = await response.json();
@@ -54,10 +42,6 @@ function CardUI() {
         setMessage("API Error: " + res.error);
       } else {
         setMessage('Card has been added');
-        if (res.jwtToken) {
-          // Store the refreshed token if it was returned
-          storeToken(res.jwtToken);
-        }
       }
     } catch (error: any) {
       setMessage(error.toString());
@@ -66,24 +50,15 @@ function CardUI() {
 
   async function searchCard(e: React.MouseEvent<HTMLButtonElement>): Promise<void> {
     e.preventDefault();
-    let jwtToken = retrieveToken();
-    console.log("Using token for searchCard:", jwtToken);
 
-    if (!jwtToken) {
-      setMessage("JWT Token is missing. Please log in again.");
-      return;
-    }
-
-    const obj = { userId: userId, search: search, jwtToken: jwtToken };
+    const obj = { userId: userId, search: search };
     const js = JSON.stringify(obj);
 
     try {
       const response = await fetch(buildPath('api/searchcards'), {
         method: 'POST',
         body: js,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const res = await response.json();
@@ -97,11 +72,6 @@ function CardUI() {
 
         setResults('Card(s) have been retrieved');
         setCardList(resultText);
-
-        if (res.jwtToken) {
-          // Store the refreshed token if it was returned
-          storeToken(res.jwtToken);
-        }
       }
     } catch (error: any) {
       console.error(error.toString());
