@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(FitJourneyApp());
@@ -37,6 +39,62 @@ class FitJourneyApp extends StatelessWidget {
 class LoginPage extends StatelessWidget {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String? _errorMessage;
+
+  Future<void> _login(BuildContext context) async {
+    final String login = _usernameController.text;
+    final String password = _passwordController.text;
+
+    final url = Uri.parse('https://fitjourneyhome.com/api/login'); // Update with your API URL
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'login': login, // Send 'login' instead of 'username'
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response
+        final data = jsonDecode(response.body);
+        // Handle successful login (e.g., save user info, navigate to another screen)
+        print('Login successful: ${data['id']}'); // You can save the user ID or other info
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        // Handle error response
+        final errorData = jsonDecode(response.body);
+        _errorMessage = errorData['error'] ?? 'Login failed';
+        _showErrorDialog(context, _errorMessage!);
+      }
+    } catch (error) {
+      _errorMessage = 'An error occurred: $error';
+      _showErrorDialog(context, _errorMessage!);
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,9 +130,7 @@ class LoginPage extends StatelessWidget {
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/home');
-                },
+                onPressed: () => _login(context), // Call the login function
                 child: Text('Continue'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
