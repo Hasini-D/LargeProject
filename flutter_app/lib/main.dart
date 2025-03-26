@@ -154,15 +154,74 @@ class LoginPage extends StatelessWidget {
   }
 }
 
+
 // ----------------------
 // Register Page
 // ----------------------
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController  = TextEditingController();
   final TextEditingController _emailController     = TextEditingController();
   final TextEditingController _usernameController  = TextEditingController();
   final TextEditingController _passwordController  = TextEditingController();
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('OK'),
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> _register() async {
+    final firstName = _firstNameController.text;
+    final lastName = _lastNameController.text;
+    final email = _emailController.text;
+    final login = _usernameController.text; // note: API expects 'login'
+    final password = _passwordController.text;
+
+    final url = Uri.parse('https://fitjourneyhome.com/api/register'); // update with your API URL
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'login': login,
+          'password': password,
+        }),
+      );
+      if (response.statusCode == 200) {
+        // Registration successful – navigate to home screen
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        // Registration error – show the error message from the API
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['error'] ?? 'Registration failed';
+        _showErrorDialog(errorMessage);
+      }
+    } catch (error) {
+      _showErrorDialog('An error occurred: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,9 +288,7 @@ class RegisterPage extends StatelessWidget {
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/home');
-                    },
+                    onPressed: _register,
                     child: Text('Submit'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
@@ -247,6 +304,8 @@ class RegisterPage extends StatelessWidget {
     );
   }
 }
+
+
 
 // ----------------------
 // Add Friend Page
