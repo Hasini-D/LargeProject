@@ -48,5 +48,12 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/logout', (req, res) => {
+  // If using sessions, destroy the session here
+  // If using JWT, you can implement token blacklisting if needed
+  res.status(200).json({ message: 'Logged out successfully' });
+});
+
+
 
 module.exports = router;
