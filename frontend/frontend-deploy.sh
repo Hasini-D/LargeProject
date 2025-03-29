@@ -1,15 +1,15 @@
 #!/bin/bash
 
-PROJECT_DIR="/var/cardsServer/frontend"
+PROJECT_DIR="."
 BUILD_DIR="dist"
 SERVER_USER="root"
 SERVER_IP="fitjourneyhome.com"
 REMOTE_DIR="/var/www/html"
 
-cd "$PROJECT_DIR"  { echo "Project directory not found!"; exit 1; }
+cd "$PROJECT_DIR"  || { echo "Project directory not found!"; exit 1; }
 
 echo "Building the project..."
-npm run build  { echo "Build failed!"; exit 1; }
+npm run build  || { echo "Build failed!"; exit 1; }
 
 echo "Copying files to server..."
 sshpass -f ../pw.txt scp -r "$BUILD_DIR"/* "$SERVER_USER@$SERVER_IP:$REMOTE_DIR" || { echo "File transfer failed!"; exit 1; }
