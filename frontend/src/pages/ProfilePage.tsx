@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileUI from '../components/ProfileUI'; // Adjust the import path if necessary
 

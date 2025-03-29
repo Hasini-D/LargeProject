@@ -1,5 +1,5 @@
 import IconUI from "./IconsUI";
-import React, { useState } from "react";
+import { useState } from "react";
 function DashboardUI() {
     const [showPopup, setShowPopup] = useState(false);
     const [gender, setGender] = useState("");
