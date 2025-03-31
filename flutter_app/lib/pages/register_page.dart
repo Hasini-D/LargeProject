@@ -138,6 +138,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                 ),
+                SizedBox(height: 20),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Go back to the login page
+                    },
+                    child: Text('Back to Login', style: TextStyle(color: Colors.blue)),
+                  ),
+                ),
               ],
             ),
           ),
