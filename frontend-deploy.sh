@@ -4,7 +4,7 @@ PROJECT_DIR="./frontend"
 BUILD_DIR="dist"
 SERVER_USER="root"
 SERVER_IP="138.197.91.217"
-REMOTE_DIR="/var/www/frontend"  
+REMOTE_DIR="/var/www/frontend"  #!not in html folder
 
 cd "$PROJECT_DIR"  || { echo "Project directory not found!"; exit 1; }
 
