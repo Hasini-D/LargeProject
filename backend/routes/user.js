@@ -117,29 +117,30 @@ router.post('/login', async (req, res) => {
   const db = getDB(req);
 
   try {
+    const errors = [];
+
+    // Check if login exists
     const user = await db.collection('users').findOne({ login });
-    console.log("Retrieved user:", user);
-
     if (!user) {
-      return res.status(401).json({ error: "Invalid username or password" });
+      errors.push('Invalid username');
     }
 
-    console.log("isVerified value:", user.isVerified);
-
-    if (!user.isVerified) {
-      console.log("User is not verified");
-      return res.status(403).json({ error: "Please verify your email before logging in." });
+    // Check if password matches
+    if (!user || (user && user.password !== password)) {
+      errors.push('Invalid password');
     }
 
-    if (user.password !== password) {
-      return res.status(401).json({ error: "Invalid username or password" });
+    // If there are errors, return them
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
     }
 
-    console.log("Login successful for user:", user.login);
-    res.status(200).json({ id: user._id.toString(), firstName: user.firstName, lastName: user.lastName });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: error.message });
+    // Proceed with login logic (e.g., generating a token)
+    const token = generateAuthToken(user);
+    return res.status(200).json({ token });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

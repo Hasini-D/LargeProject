@@ -6,6 +6,7 @@ function Login() {
   const [loginName, setLoginName] = useState('');
   const [loginPassword, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState<string[]>([]); // State to store errors
   const navigate = useNavigate();
 
   async function doLogin(event: React.FormEvent): Promise<void> {
@@ -24,68 +25,73 @@ function Login() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const data = await response.json();
 
-      const res = await response.json();
-      if (res.error) {
-        setMessage('User/Password combination incorrect');
-      } else {
-        const user = { firstName: res.firstName, lastName: res.lastName, id: res.id };
-        localStorage.setItem('user_data', JSON.stringify(user));
+      if (response.status === 400) {
+        // Display errors if login fails
+        setErrors(data.errors || []);
+      } else if (response.status === 200) {
+        // Clear errors and navigate on successful login
+        setErrors([]);
         setMessage('Login successful!');
-        navigate('/dashboard');
+        navigate('/dashboard'); // Replace with your desired route
+      } else {
+        setMessage('An unexpected error occurred.');
       }
-    } catch (error: any) {
-      setMessage(error.toString());
+    } catch (err) {
+      console.error(err);
+      setMessage('An error occurred while logging in.');
     }
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <h1 className="absolute top-0 w-full text-5xl font-bold text-center text-[#0f172a] mt-3">
-        Fit Journey
-      </h1>
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-      
-        <h2 className="text-3xl font-bold text-center text-#0f172a mb-6">Login</h2>
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
+      <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
+      <form onSubmit={doLogin} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Username"
+          value={loginName}
+          onChange={(e) => setLoginName(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+        />
 
-        <form onSubmit={doLogin} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Username"
-            value={loginName}
-            onChange={(e) => setLoginName(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-          />
+        <input
+          type="password"
+          placeholder="Password"
+          value={loginPassword}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+        />
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={loginPassword}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-          />
+        <button
+          type="submit"
+          className="w-full bg-[#0f172a] text-white py-2 rounded-lg hover:bg-[#2563eb] transition"
+        >
+          Login
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            className="w-full bg-[#0f172a] text-white py-2 rounded-lg hover:bg-[#2563eb] transition"
-          >
-            Login
-          </button>
-        </form>
-
-        {message && <p className="text-center text-red-500 mt-4">{message}</p>}
-
-        <div className="text-center mt-4">
-          <p className="text-[#0f172a]">
-            Don't have an account?{' '}
-            <button onClick={() => navigate('/register')} className="text-blue-500 underline">
-              Register
-            </button>
-          </p>
+      {errors.length > 0 && (
+        <div className="mt-4 text-red-500">
+          <h3 className="text-center font-semibold">Errors:</h3>
+          <ul className="list-disc list-inside">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
         </div>
+      )}
+
+      {message && <p className="text-center text-red-500 mt-4">{message}</p>}
+
+      <div className="text-center mt-4">
+        <p className="text-[#0f172a]">
+          Don't have an account?{' '}
+          <button onClick={() => navigate('/register')} className="text-blue-500 underline">
+            Register
+          </button>
+        </p>
       </div>
     </div>
   );
