@@ -16,29 +16,12 @@ function Register() {
     const [email, setEmail] = useState('');
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
-
-    function handleSetFirstName(e: any): void {
-        setFirstName(e.target.value);
-    }
-
-    function handleSetLastName(e: any): void {
-        setLastName(e.target.value);
-    }
-
-    function handleSetEmail(e: any): void {
-        setEmail(e.target.value);
-    }
-
-    function handleSetLogin(e: any): void {
-        setLogin(e.target.value);
-    }
-
-    function handleSetPassword(e: any): void {
-        setPassword(e.target.value);
-    }
+    const [message, setMessage] = useState('');
 
     async function doRegister(event: any): Promise<void> {
         event.preventDefault();
+        setMessage(''); // Reset message before new request
+
         const obj = { firstName, lastName, email, login, password };
         const js = JSON.stringify(obj);
 
@@ -61,25 +44,25 @@ function Register() {
             const res = await response.json();
 
             if (res.error) {
-                alert('Registration failed: ' + res.error);
+                setMessage(`Registration failed: ${res.error}`);
             } else {
-                alert('Registration successful!');
-                window.location.href = '/login';
+                setMessage('Registration successful! Please check your email to verify your account before logging in.');
             }
         } catch (error: any) {
-            alert(error.toString());
+            setMessage(error.toString());
         }
     }
 
     return (
         <div id="registerDiv">
             <span id="inner-title">REGISTER</span><br />
-            <input type="text" id="firstName" placeholder="First Name" value={firstName} onChange={handleSetFirstName} /><br />
-            <input type="text" id="lastName" placeholder="Last Name" value={lastName} onChange={handleSetLastName} /><br />
-            <input type="email" id="email" placeholder="Email" value={email} onChange={handleSetEmail} /><br />
-            <input type="text" id="login" placeholder="Username" value={login} onChange={handleSetLogin} /><br />
-            <input type="password" id="password" placeholder="Password" value={password} onChange={handleSetPassword} /><br />
+            <input type="text" id="firstName" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} /><br />
+            <input type="text" id="lastName" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} /><br />
+            <input type="email" id="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} /><br />
+            <input type="text" id="login" placeholder="Username" value={login} onChange={(e) => setLogin(e.target.value)} /><br />
+            <input type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} /><br />
             <input type="submit" id="registerButton" className="buttons" value="Register" onClick={doRegister} />
+            <p>{message}</p>
         </div>
     );
 }
