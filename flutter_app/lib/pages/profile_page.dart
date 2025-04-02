@@ -1,10 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class MyProfilePage extends StatelessWidget {
   final String currentWeight = "180 lbs";
   final String currentHeight = "70 inches";
   final String username = "john_doe";
   final String email = "john@example.com";
+
+  Future<void> _logout(BuildContext context) async {
+    final url = Uri.parse('https://fitjourneyhome.com/api/logout');
+
+    try {
+      final response = await http.post(url, headers: {
+        'Content-Type': 'application/json',
+      });
+
+      if (response.statusCode == 200) {
+        // Successfully logged out
+        print('Logout successful: ${jsonDecode(response.body)['message']}');
+        // Navigate to the login page or home page
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      } else {
+        // Handle error response
+        final errorData = jsonDecode(response.body);
+        _showErrorDialog(context, errorData['error'] ?? 'Logout failed');
+      }
+    } catch (error) {
+      _showErrorDialog(context, 'An error occurred: $error');
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +107,7 @@ class MyProfilePage extends StatelessWidget {
             Spacer(),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                },
+                onPressed: () => _logout(context),
                 child: Text("Log Out"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
