@@ -8,6 +8,7 @@ function Register() {
     const [email, setEmail] = useState('');
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
+    const [errors, setErrors] = useState<string[]>([]); // State to store errors
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
 
@@ -15,101 +16,103 @@ function Register() {
         event.preventDefault();
         const obj = { firstName, lastName, email, login, password };
         const js = JSON.stringify(obj);
-    
+
         try {
             const response = await fetch(buildPath('api/register'), {
                 method: 'POST',
                 body: js,
                 headers: { 'Content-Type': 'application/json' },
             });
-    
-            const res = await response.json();
-    
-            if (!response.ok) {
-                // Display all errors from the backend
-                if (res.errors && Array.isArray(res.errors)) {
-                    setMessage(res.errors.join(', '));
-                } else {
-                    setMessage(res.error || 'An unexpected error occurred.');
-                }
-            } else {
+
+            const data = await response.json();
+
+            if (response.status === 400) {
+                // Display errors if registration fails
+                setErrors(data.errors || []);
+            } else if (response.status === 200) {
+                // Clear errors and navigate on successful registration
+                setErrors([]);
                 setMessage('Registration successful!');
-                navigate('/login');
+                navigate('/login'); // Replace with your desired route
+            } else {
+                setMessage('An unexpected error occurred.');
             }
-        } catch (error: any) {
-            // Handle unexpected errors
-            setMessage('An unexpected error occurred: ' + error.toString());
+        } catch (err) {
+            console.error(err);
+            setMessage('An error occurred while registering.');
         }
     }
 
     return (
-        <div className="flex h-screen items-center justify-center bg-gray-100">
-            <h1 className="absolute top-0 w-full text-5xl font-bold text-center text-[#0f172a] mt-3">
-                Fit Journey
-            </h1>
-            <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+        <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
+            <h1 className="text-2xl font-bold text-center mb-6">Register</h1>
+            <form onSubmit={doRegister} className="space-y-4">
+                <input
+                    type="text"
+                    placeholder="First Name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                />
+                <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                />
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                />
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={login}
+                    onChange={(e) => setLogin(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                />
 
-                <h2 className="text-3xl font-bold text-center text-[#0f172a] mb-6">Register</h2>
+                <button
+                    type="submit"
+                    className="w-full bg-[#0f172a] text-white py-2 rounded-lg hover:bg-[#2563eb] transition"
+                >
+                    Register
+                </button>
+            </form>
 
-                <form onSubmit={doRegister} className="space-y-4">
-                    <input
-                        type="text"
-                        placeholder="First Name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Last Name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                    />
-
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                    />
-
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        value={login}
-                        onChange={(e) => setLogin(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                    />
-
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none"
-                    />
-
-                    <button
-                        type="submit"
-                        className="w-full bg-[#0f172a] text-white py-2 rounded-lg hover:bg-[#2563eb] transition"
-                    >
-                        Register
-                    </button>
-                </form>
-
-                {message && <p className="text-center text-red-500 mt-4">{message}</p>}
-
-                <div className="text-center mt-4">
-                    <p className="text-[#0f172a]">
-                        Already have an account?{' '}
-                        <button onClick={() => navigate('/login')} className="text-blue-500 underline">
-                            Login
-                        </button>
-                    </p>
+            {errors.length > 0 && (
+                <div className="mt-4 text-red-500">
+                    <h3 className="text-center font-semibold">Errors:</h3>
+                    <ul className="list-disc list-inside">
+                        {errors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                        ))}
+                    </ul>
                 </div>
+            )}
+
+            {message && errors.length === 0 && ( // Display message only if there are no errors
+                <p className="text-center text-red-500 mt-4">{message}</p>
+            )}
+
+            <div className="text-center mt-4">
+                <p className="text-[#0f172a]">
+                    Already have an account?{' '}
+                    <button onClick={() => navigate('/login')} className="text-blue-500 underline">
+                        Login
+                    </button>
+                </p>
             </div>
         </div>
     );
