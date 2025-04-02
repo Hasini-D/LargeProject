@@ -15,14 +15,26 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 router.post('/register', async (req, res) => {
   const { firstName, lastName, email, login, password } = req.body;
   const db = getDB(req);
-  
-  try {
-    // Check if username or email already exists
-    const existingUser = await db.collection('users').findOne({ login });
-    if (existingUser) return res.status(400).json({ error: 'Username already exists' });
 
+  try {
+    const errors = [];
+
+    // Check if username already exists
+    const existingUser = await db.collection('users').findOne({ login });
+    if (existingUser) {
+      errors.push('Username already exists');
+    }
+
+    // Check if email already exists
     const existingEmail = await db.collection('users').findOne({ email });
-    if (existingEmail) return res.status(400).json({ error: 'Email already exists' });
+    if (existingEmail) {
+      errors.push('Email already exists');
+    }
+
+    // If there are errors, return them
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
 
     // Generate verification token & link
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -46,8 +58,7 @@ router.post('/register', async (req, res) => {
       verificationToken,
     });
 
-    res.status(200).json({ message: "User registered! Please check your email to verify your account." });
-
+    res.status(200).json({ message: 'Registration successful! Please check your email to verify your account.' });
   } catch (error) {
     console.error('Error during registration:', error);
     
