@@ -15,28 +15,30 @@ function Register() {
         event.preventDefault();
         const obj = { firstName, lastName, email, login, password };
         const js = JSON.stringify(obj);
-
+    
         try {
             const response = await fetch(buildPath('api/register'), {
                 method: 'POST',
                 body: js,
                 headers: { 'Content-Type': 'application/json' },
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+    
             const res = await response.json();
-
-            if (res.error) {
-                setMessage('Registration failed: ' + res.error);
+    
+            if (!response.ok) {
+                // Display all errors from the backend
+                if (res.errors && Array.isArray(res.errors)) {
+                    setMessage(res.errors.join(', '));
+                } else {
+                    setMessage(res.error || 'An unexpected error occurred.');
+                }
             } else {
                 setMessage('Registration successful!');
                 navigate('/login');
             }
         } catch (error: any) {
-            setMessage(error.toString());
+            // Handle unexpected errors
+            setMessage('An unexpected error occurred: ' + error.toString());
         }
     }
 
