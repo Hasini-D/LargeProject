@@ -53,7 +53,7 @@ class _RegisterPageState extends State<RegisterPage> {
         }),
       );
       if (response.statusCode == 200) {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/emailVerification');
       } else {
         final errorData = jsonDecode(response.body);
         final errorMessage = errorData['error'] ?? 'Registration failed';
@@ -131,7 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 Center(
                   child: ElevatedButton(
                     onPressed: _register,
-                    child: Text('Submit'),
+                    child: Text('Continue'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,

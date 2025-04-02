@@ -6,6 +6,8 @@ import 'package:flutter_app/pages/new_workout_plan_step1.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
+import 'pages/email_verification_page.dart';
+import 'pages/additional_registration_page.dart';
 
 void main() {
   runApp(FitJourneyApp());
@@ -28,6 +30,8 @@ class FitJourneyApp extends StatelessWidget {
       routes: {
         '/': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
+        '/emailVerification': (context) => EmailVerificationPage(),
+        '/additionalRegistration': (context) => AdditionalRegistrationPage(),
         '/home': (context) => HomeScreen(),
         '/addFriend': (context) => AddFriendPage(),
         '/newWorkoutStep1': (context) => NewWorkoutPlanStep1(),
