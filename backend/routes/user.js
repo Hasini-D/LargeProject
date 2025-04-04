@@ -1,6 +1,8 @@
 const express = require('express');
 const crypto = require('crypto');
-const sgMail = require('@sendgrid/mail');
+const fetch = require('node-fetch');
+require('dotenv').config();
+
 const router = express.Router();
 
 // Add this function before using it
@@ -12,11 +14,8 @@ function generateAuthToken(user) {
 
 function getDB(req) {
   const client = req.app.locals.dbClient;
-  return client.db("MERNDatabase");
+  return client.db("sample_mflix");
 }
-
-// Configure SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Registration endpoint
 router.post('/register', async (req, res) => {
@@ -47,16 +46,26 @@ router.post('/register', async (req, res) => {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationLink = `${process.env.BASE_URL}/api/verify-email?token=${verificationToken}`;
 
-    // Prepare the verification email
-    const msg = {
-      to: email,
-      from: process.env.EMAIL_USER,
-      subject: 'Verify Your Email',
-      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`
-    };
+    // Send verification email via Resend
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Verify Your Email",
+        html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`
+      })
+    });
 
-    // Send email before adding user to database
-    await sgMail.send(msg);
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("Resend API Error:", data);
+      return res.status(500).json({ error: "Email sending failed. Please try again." });
+    }
 
     // Add user to the database **only if email sending succeeds**
     await db.collection('users').insertOne({
@@ -68,12 +77,6 @@ router.post('/register', async (req, res) => {
     res.status(200).json({ message: 'Registration successful! Please check your email to verify your account.' });
   } catch (error) {
     console.error('Error during registration:', error);
-    
-    // Specific error for email issues
-    if (error.response) {
-      console.error("SendGrid response error:", error.response.body);
-    }
-    
     res.status(500).json({ error: "Registration failed. Please try again." });
   }
 });
@@ -84,33 +87,27 @@ router.get('/verify-email', async (req, res) => {
   const db = getDB(req);
 
   try {
-    // Log the token received in the request
     console.log("Verification token received:", token);
 
     // Find user by verification token
     const user = await db.collection('users').findOne({ verificationToken: token });
 
-    // Log the retrieved user
     console.log("Retrieved user:", user);
 
-    // If no user is found or the token is invalid/expired
     if (!user) {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
 
     // Update the user's verification status
     const updateResult = await db.collection('users').updateOne(
-      { verificationToken: token }, // Find user by token
+      { verificationToken: token },
       { 
-        $set: { isVerified: true },   // Set isVerified to true
-        $unset: { verificationToken: 1 } // Remove the verificationToken field
+        $set: { isVerified: true },
+        $unset: { verificationToken: 1 }
       }
     );
 
-    // Log the result of the update operation
     console.log("Update result:", updateResult);
-
-    // Send response indicating successful verification
     res.status(200).json({ message: 'Email verified! You can now log in.' });
   } catch (error) {
     console.error('Verification error:', error);
@@ -137,7 +134,11 @@ router.post('/login', async (req, res) => {
       errors.push('Invalid password');
     }
 
-    // If there are errors, return them
+    // If not verified, block login
+    if (user && !user.isVerified) {
+      errors.push('Email not verified. Please check your email.');
+    }
+
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
