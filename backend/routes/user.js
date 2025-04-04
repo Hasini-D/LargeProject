@@ -3,6 +3,13 @@ const crypto = require('crypto');
 const sgMail = require('@sendgrid/mail');
 const router = express.Router();
 
+// Add this function before using it
+function generateAuthToken(user) {
+  const jwt = require('jsonwebtoken');
+  const secretKey = process.env.JWT_SECRET || 'yourSecretKey'; // Use a secure key
+  return jwt.sign({ id: user.id, email: user.email }, secretKey, { expiresIn: '1h' });
+}
+
 function getDB(req) {
   const client = req.app.locals.dbClient;
   return client.db("MERNDatabase");
