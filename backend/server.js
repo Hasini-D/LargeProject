@@ -18,7 +18,8 @@ app.use(cors({
     "http://localhost:5177"
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: "Content-Type, Authorization"
+  allowedHeaders: "Content-Type, Authorization",
+  credentials: true
 }));
 
 // Parse JSON bodies

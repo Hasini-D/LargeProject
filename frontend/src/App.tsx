@@ -9,6 +9,7 @@ import CalendarPage from './pages/CalendarPage';
 import DietPage from './pages/DietPage';
 import FriendsPage from './pages/FriendsPage';
 import ProfilePage from './pages/ProfilePage';
+import VerificationPage from './pages/VerificationPage';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/diet" element={<DietPage />} />
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/verification" element={<VerificationPage />} /> {/* Add the route for the verification page */}
         <Route path="/register" element={<RegisterPage />} /> {/* Add the route for the registration page */}
         {/* Redirect invalid routes to the login page */}
         <Route path="*" element={<Navigate to="/" />} />
