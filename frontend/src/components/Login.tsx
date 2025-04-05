@@ -27,19 +27,21 @@ function Login() {
 
       const data = await response.json();
 
-      if (response.status === 400) {
+      if (response.ok) {
+        // Save the token and user data in localStorage
+        localStorage.setItem('token_data', data.token);
+        localStorage.setItem('user_data', JSON.stringify(data.user));
+
+        // Navigate to the dashboard
+        navigate('/dashboard');
+      } else if (response.status === 400) {
         // Display errors if login fails
         setErrors(data.errors || []);
-      } else if (response.status === 200) {
-        // Clear errors and navigate on successful login
-        setErrors([]);
-        setMessage('Login successful!');
-        navigate('/dashboard'); // Replace with your desired route
       } else {
         setMessage('An unexpected error occurred.');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error('Error during login:', error);
       setMessage('An error occurred while logging in.');
     }
   }
