@@ -13,6 +13,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController     = TextEditingController();
   final TextEditingController _usernameController  = TextEditingController();
   final TextEditingController _passwordController  = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -38,6 +39,13 @@ class _RegisterPageState extends State<RegisterPage> {
     final email = _emailController.text;
     final login = _usernameController.text;
     final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    // Validate password match
+    if (password != confirmPassword) {
+      _showErrorDialog('Passwords do not match. Please try again.');
+      return; // Exit the function if passwords do not match
+    }
 
     final url = Uri.parse('https://fitjourneyhome.com/api/register');
     try {
@@ -122,6 +130,16 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: _passwordController,
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  style: TextStyle(color: Colors.black),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _confirmPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,

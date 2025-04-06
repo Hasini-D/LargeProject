@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart'; // Import the provider package
+import '../models/user.dart'; // Import the User model
+import '../providers/user_provider.dart'; // Import the UserProvider
+
 
 class LoginPage extends StatelessWidget {
   final TextEditingController _usernameController = TextEditingController();
@@ -25,13 +29,34 @@ class LoginPage extends StatelessWidget {
         }),
       );
 
+      // Log the response body for debugging
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('Login successful: ${data['id']}');
+
+        // Extract user data directly from the response
+        String firstName = data['firstName'] ?? 'No first name provided';
+        String lastName = data['lastName'] ?? 'No last name provided';
+        String email = 'No email provided'; // Assuming email is not returned in this response
+        String userLogin = login; // Use the login provided by the user
+        String id = data['id'] ?? 'No ID provided';
+
+        // Set user data in the provider
+        Provider.of<UserProvider>(context, listen: false).setUser (
+          User(
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            login: userLogin,
+            id: id,
+          ),
+        );
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         final errorData = jsonDecode(response.body);
-        _errorMessage = errorData['error'] ?? 'Login failed';
+        _errorMessage = errorData['errors']?.join(', ') ?? 'Login failed';
         _showErrorDialog(context, _errorMessage!);
       }
     } catch (error) {

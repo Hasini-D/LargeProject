@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:provider/provider.dart'; // Import the provider package
+import '../providers/user_provider.dart'; // Import your UserProvider
 
 class MyProfilePage extends StatelessWidget {
+  // Initialize with default values
   final String currentWeight = "180 lbs";
   final String currentHeight = "70 inches";
-  final String username = "john_doe";
-  final String email = "john@example.com";
 
   Future<void> _logout(BuildContext context) async {
     final url = Uri.parse('https://fitjourneyhome.com/api/logout');
@@ -51,9 +52,12 @@ class MyProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Access the user data from the UserProvider
+    final user = Provider.of<UserProvider>(context).user;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Profile", style: TextStyle(color: Colors.black)),
+        title: Text("${user?.firstName} ${user?.lastName}'s Profile", style: TextStyle(color: Colors.black)),
         centerTitle: true,
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black),
@@ -70,8 +74,7 @@ class MyProfilePage extends StatelessWidget {
               child: ListTile(
                 leading: Icon(Icons.monitor_weight, color: Colors.blue),
                 title: Text("Current Weight", style: TextStyle(color: Colors.black)),
-                trailing: Text(currentWeight,
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                trailing: Text(currentWeight, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ),
             ),
             Card(
@@ -80,8 +83,7 @@ class MyProfilePage extends StatelessWidget {
               child: ListTile(
                 leading: Icon(Icons.height, color: Colors.blue),
                 title: Text("Current Height", style: TextStyle(color: Colors.black)),
-                trailing: Text(currentHeight,
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                trailing: Text(currentHeight, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ),
             ),
             Card(
@@ -90,8 +92,7 @@ class MyProfilePage extends StatelessWidget {
               child: ListTile(
                 leading: Icon(Icons.person, color: Colors.blue),
                 title: Text("Username", style: TextStyle(color: Colors.black)),
-                trailing: Text(username,
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                trailing: Text(user?.login ?? '', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ),
             ),
             Card(
@@ -100,8 +101,7 @@ class MyProfilePage extends StatelessWidget {
               child: ListTile(
                 leading: Icon(Icons.email, color: Colors.blue),
                 title: Text("Email", style: TextStyle(color: Colors.black)),
-                trailing: Text(email,
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                trailing: Text(user?.email ?? '', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
               ),
             ),
             Spacer(),
