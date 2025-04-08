@@ -15,7 +15,7 @@ function generateAuthToken(user) {
 
 function getDB(req) {
   const client = req.app.locals.dbClient;
-  return client.db("MERNDatabase");
+  return client.db("sample_mflix");
 }
 
 // Middleware to authenticate user

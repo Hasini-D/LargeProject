@@ -14,9 +14,16 @@ function Register() {
 
     async function doRegister(event: React.FormEvent): Promise<void> {
         event.preventDefault();
+
+        if(!firstName || !lastName || !email || !login || !password) {
+            setErrors(['All fields are required.']);
+            return;
+        }
         const obj = { firstName, lastName, email, login, password };
         const js = JSON.stringify(obj);
 
+        console.log("Registering with payload :", obj);
+        console.log("Posting to:", buildPath('api/register'));
         try {
             const response = await fetch(buildPath('api/register'), {
                 method: 'POST',
