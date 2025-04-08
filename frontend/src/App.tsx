@@ -10,6 +10,7 @@ import DietPage from './pages/DietPage';
 import FriendsPage from './pages/FriendsPage';
 import ProfilePage from './pages/ProfilePage';
 import VerificationPage from './pages/VerificationPage';
+import UserStatsPage from './pages/UserStatsPage';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/verification" element={<VerificationPage />} /> {/* Add the route for the verification page */}
         <Route path="/register" element={<RegisterPage />} /> {/* Add the route for the registration page */}
+        <Route path="/setup-profile" element={<UserStatsPage />} />
         {/* Redirect invalid routes to the login page */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

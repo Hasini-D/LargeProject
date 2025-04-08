@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const fetch = require('node-fetch');
+const { ObjectId } = require('mongodb');
 require('dotenv').config();
 
 const router = express.Router();
@@ -14,7 +15,7 @@ function generateAuthToken(user) {
 
 function getDB(req) {
   const client = req.app.locals.dbClient;
-  return client.db("sample_mflix");
+  return client.db("MERNDatabase");
 }
 
 // Middleware to authenticate user
@@ -75,7 +76,7 @@ router.post('/register', async (req, res) => {
     if (errors.length > 0) {
       return res.status(400).json({ errors });
     }
-
+    
     // Generate verification token & link
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationLink = `${process.env.BASE_URL}/api/verify-email?token=${verificationToken}`;
@@ -115,6 +116,57 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// GET userId by email
+router.get('/get-user-id', async (req, res) => {
+  const { email } = req.query;
+  const db = getDB(req);
+
+  try {
+    const user = await db.collection('users').findOne({ email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    return res.status(200).json({ userId: user._id });
+  } catch (error) {
+    console.error('Fetch user ID error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST profile info
+router.post('/user-info', async (req, res) => {
+  const { userId, gender, height, weight, age, goal } = req.body;
+  const db = getDB(req);
+
+  try {
+    if (!ObjectId.isValid(userId)) {
+      return res.status(404).json({ error: 'Invalid user ID' });
+    }
+        
+    const result = await db.collection('userStats').updateOne(
+      {userId: new ObjectId(userId)},
+      { 
+        $set : {
+          userId: new ObjectId(userId),
+          gender, 
+          height, 
+          weight, 
+          age, 
+          goal, 
+          isProfileComplete: true, 
+          updatedAt: new Date(), },
+      },
+      { upsert: true } // Create the document if it doesn't exist
+    );
+
+    if (result.modifiedCount === 0 && result.upsertedCount === 0) return res.status(404).json({ error: 'User not found or unchanged' });
+
+    res.status(200).json({ message: 'Profile added' });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Email verification endpoint
 router.get('/verify-email', async (req, res) => {
   const token = req.query.token; // Extract token from query parameters
@@ -134,15 +186,15 @@ router.get('/verify-email', async (req, res) => {
 
     // Update the user's verification status
     const updateResult = await db.collection('users').updateOne(
-      { verificationToken: token },
+      {verificationToken: token }, // Use the userId from the token
       { 
         $set: { isVerified: true },
         $unset: { verificationToken: 1 }
       }
     );
 
-    console.log("Update result:", updateResult);
-    res.status(200).json({ message: 'Email verified! You can now log in.' });
+    //console.log("Update result:", updateResult);
+    res.redirect(`${process.env.FRONTEND_URL}/setup-profile?email=${user.email}`);
   } catch (error) {
     console.error('Verification error:', error);
     res.status(500).json({ error: error.message });

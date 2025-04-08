@@ -63,6 +63,6 @@ client.connect()
     process.exit(1);
   });
 
-  // User API endpoints
+  /* User API endpoints
   const userRouter = require('./routes/user.js');
-  app.use('/user', userRouter);
+  app.use('/user', userRouter);*/
