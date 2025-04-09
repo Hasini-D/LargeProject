@@ -35,13 +35,14 @@ class LoginPage extends StatelessWidget {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final userData = data['user'];
 
         // Extract user data directly from the response
-        String firstName = data['firstName'] ?? 'No first name provided';
-        String lastName = data['lastName'] ?? 'No last name provided';
-        String email = 'No email provided'; // Assuming email is not returned in this response
-        String userLogin = login; // Use the login provided by the user
-        String id = data['id'] ?? 'No ID provided';
+        String firstName = userData['firstName'] ?? 'No first name provided';
+        String lastName = userData['lastName'] ?? 'No last name provided';
+        String email = userData['email'] ?? 'No email provided';
+        String userLogin = userData['login'] ?? login;
+        String id = userData['id'] ?? 'No ID provided';
 
         // Set user data in the provider
         Provider.of<UserProvider>(context, listen: false).setUser (
