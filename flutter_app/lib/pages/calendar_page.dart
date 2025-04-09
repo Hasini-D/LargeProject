@@ -1,4 +1,7 @@
+// lib/screens/calendar_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class CalendarPage extends StatefulWidget {
   @override
@@ -8,12 +11,11 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   DateTime _currentMonth = DateTime(2025, DateTime.now().month, 1);
   int _streak = 0;
-  // Composite key: "year-month-day" for each day's status.
+  // Composite key for each day’s status.
   Map<String, String> _dayStatus = {};
   int? _selectedDay;
-  String? _selectedStatus; // Selected status for the current selected day
-
-  // Simulated user goal; in production, this should come from the user's registration data.
+  String? _selectedStatus; // Selected status for the current day
+  // Simulated user goal; this may eventually be derived from the user’s settings.
   String _userGoal = "Maintain Weight";
 
   // Returns a unique key for a day in the current month.
@@ -60,7 +62,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return DateTime(month.year, month.month + 1, 0).day;
   }
 
-  // When a day is tapped, update the selected day and reset any previous status selection.
+  // When a day is tapped, update selection.
   void _onDayTapped(int day) {
     setState(() {
       _selectedDay = day;
@@ -68,20 +70,19 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-  // This function is called when the user confirms their status selection.
+  // Confirm the selected status for a day.
   void _confirmStatus() {
     if (_selectedDay != null && _selectedStatus != null) {
       String key = _dayKey(_selectedDay!);
       setState(() {
         _dayStatus[key] = _selectedStatus!;
-        // Update streak: Increase if "Worked Out", reset if "Missed". For "Rest Day", do not change.
         if (_selectedStatus == "Worked Out") {
           _streak++;
         } else if (_selectedStatus == "Missed") {
           _streak = 0;
         }
       });
-      // Clear selection after confirmation
+      // Clear selection after confirmation.
       setState(() {
         _selectedDay = null;
         _selectedStatus = null;
@@ -89,10 +90,11 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-  // Build calendar grid with composite keys to determine each day’s status.
+  // Build calendar grid.
   Widget _buildCalendarGrid() {
     int daysInThisMonth = _daysInMonth(_currentMonth);
-    int startingWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+    int startingWeekday =
+        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
     int offset = startingWeekday % 7;
     int totalCells = offset + daysInThisMonth;
 
@@ -110,7 +112,8 @@ class _CalendarPageState extends State<CalendarPage> {
           return Container();
         }
         int day = index - offset + 1;
-        bool isToday = (_currentMonth.month == DateTime.now().month && day == DateTime.now().day);
+        bool isToday = (_currentMonth.month == DateTime.now().month &&
+            day == DateTime.now().day);
         Color cellColor = isToday ? Colors.yellow : Colors.grey[200]!;
         String key = _dayKey(day);
 
@@ -125,9 +128,10 @@ class _CalendarPageState extends State<CalendarPage> {
             child: Stack(
               children: [
                 Center(
-                  child: Text(day.toString(), style: TextStyle(color: Colors.black)),
+                  child: Text(day.toString(),
+                      style: TextStyle(color: Colors.black)),
                 ),
-                // Status indicator dot
+                // Status indicator dot if set.
                 if (_dayStatus.containsKey(key))
                   Positioned(
                     bottom: 4,
@@ -153,14 +157,14 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-  // Build the "To Do" section that appears below the calendar when a day is selected.
+  // Build the "To Do" section that appears when a day is selected.
   Widget _buildToDoSection() {
     if (_selectedDay == null) {
       return Container();
     }
     Map<String, String> plan = _getWorkoutPlan();
-    // Create a formatted date string for display.
-    String displayDate = "${_monthName(_currentMonth.month)} $_selectedDay, ${_currentMonth.year}";
+    String displayDate =
+        "${_monthName(_currentMonth.month)} $_selectedDay, ${_currentMonth.year}";
     return Container(
       padding: EdgeInsets.all(16),
       margin: EdgeInsets.only(top: 16),
@@ -168,16 +172,24 @@ class _CalendarPageState extends State<CalendarPage> {
         color: Colors.blue[50],
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
-          BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 4, offset: Offset(2, 2))
+          BoxShadow(
+              color: Colors.blue.withOpacity(0.2),
+              blurRadius: 4,
+              offset: Offset(2, 2))
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("To Do for $displayDate:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue[900])),
+          Text("To Do for $displayDate:",
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900])),
           SizedBox(height: 8),
           for (var exercise in plan.entries)
-            Text("${exercise.key}: ${exercise.value}", style: TextStyle(fontSize: 16, color: Colors.black)),
+            Text("${exercise.key}: ${exercise.value}",
+                style: TextStyle(fontSize: 16, color: Colors.black)),
           SizedBox(height: 16),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
@@ -223,9 +235,12 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get current user info from the provider.
+    final user = Provider.of<UserProvider>(context).user;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendar', style: TextStyle(color: Colors.black)),
+        title: Text('Home', style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black),
         elevation: 0,
@@ -236,7 +251,19 @@ class _CalendarPageState extends State<CalendarPage> {
             padding: EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Month navigation row
+                // Welcome message at the top.
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Welcome, ${user?.login ?? 'User'}!",
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                ),
+                SizedBox(height: 16),
+                // Month navigation row.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -245,21 +272,26 @@ class _CalendarPageState extends State<CalendarPage> {
                       onPressed: () {
                         setState(() {
                           if (_currentMonth.month > 1) {
-                            _currentMonth = DateTime(2025, _currentMonth.month - 1, 1);
+                            _currentMonth = DateTime(
+                                2025, _currentMonth.month - 1, 1);
                           }
                         });
                       },
                     ),
                     Text(
                       '${_monthName(_currentMonth.month)} 2025',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
                     ),
                     IconButton(
                       icon: Icon(Icons.arrow_right, color: Colors.black),
                       onPressed: () {
                         setState(() {
                           if (_currentMonth.month < 12) {
-                            _currentMonth = DateTime(2025, _currentMonth.month + 1, 1);
+                            _currentMonth = DateTime(
+                                2025, _currentMonth.month + 1, 1);
                           }
                         });
                       },
@@ -267,27 +299,33 @@ class _CalendarPageState extends State<CalendarPage> {
                   ],
                 ),
                 SizedBox(height: 10),
-                // Days of week header
+                // Days of week header.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                      .map((day) => Expanded(child: Center(child: Text(day, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)))))
+                      .map((day) => Expanded(
+                          child: Center(
+                              child: Text(day,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black)))))
                       .toList(),
                 ),
                 SizedBox(height: 10),
-                // Calendar grid
+                // Calendar grid.
                 _buildCalendarGrid(),
                 SizedBox(height: 20),
-                // Streak counter row
+                // Streak counter row.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('🔥', style: TextStyle(fontSize: 24)),
                     SizedBox(width: 8),
-                    Text('$_streak', style: TextStyle(fontSize: 24, color: Colors.black)),
+                    Text('$_streak',
+                        style: TextStyle(fontSize: 24, color: Colors.black)),
                   ],
                 ),
-                // To Do section appears here when a day is selected
+                // "To Do" section (if a day is selected).
                 _buildToDoSection(),
               ],
             ),
