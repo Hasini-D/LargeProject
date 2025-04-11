@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 
@@ -108,20 +111,89 @@ class _CalendarPageState extends State<CalendarPage> {
     DefaultTabController.of(context)?.animateTo(1);
   }
 
-  // Confirm the selected status for the day.
-  void _confirmStatus() {
+  void _confirmStatus() async {
+    print("Confirm Status Button Pressed"); // Debugging line
     if (_selectedDay != null && _selectedStatus != null) {
       String key = _dayKey(_selectedDay!);
+
+      // Update the day status first
       setState(() {
         _dayStatus[key] = _selectedStatus!;
-        if (_selectedStatus == "Worked Out") {
-          _streak++;
-        } else if (_selectedStatus == "Missed") {
-          _streak = 0;
-        }
-        // Keep the selected day highlighted.
-        _selectedStatus = null;
+        // Do not set _selectedStatus to null here
       });
+
+      // Print the selected status for debugging
+      print("Selected Status: '$_selectedStatus'"); // Debugging line
+
+      // Perform the asynchronous operation outside of setState
+      if (_selectedStatus!.trim() == "Worked Out") {
+        _streak++;
+        print("Incrementing streak..."); // Debugging line
+        await _incrementStreak(); // Call the increment streak function
+      } else if (_selectedStatus!.trim() == "Missed") {
+        _streak = 0;
+        print("Resetting streak..."); // Debugging line
+        await _resetStreak(); // Call the reset streak function
+      } else {
+        print("Status did not match: '$_selectedStatus'"); // Debugging line
+      }
+
+      // Now set _selectedStatus to null after processing
+      setState(() {
+        _selectedStatus = null; // Reset the selected status after processing
+      });
+    } else {
+      print("Selected Day: $_selectedDay, Selected Status: $_selectedStatus"); // Debugging line
+    }
+  }
+
+// Function to increment the streak
+  Future<void> _incrementStreak() async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final url = Uri.parse('https://fitjourneyhome.com/api/increment-streak');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${user?.token}', // Include token if needed
+        },
+        body: json.encode({'userId': user?.id}),
+      );
+
+      if (response.statusCode == 200) {
+        print('Streak incremented successfully.');
+      } else {
+        print('Failed to increment streak: ${response.body}');
+      }
+    } catch (error) {
+      print('Error incrementing streak: $error');
+    }
+  }
+
+// Function to reset the streak
+  Future<void> _resetStreak() async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final url = Uri.parse('https://fitjourneyhome.com/api/reset-streak');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${user?.token}', // Include token if needed
+        },
+        body: json.encode({'userId': user?.id}),
+      );
+
+      if (response.statusCode == 200) {
+        print('Streak reset successfully.');
+      } else {
+        print('Failed to reset streak: ${response.body}');
+      }
+    } catch (error) {
+      print('Error resetting streak: $error');
     }
   }
 
@@ -333,6 +405,7 @@ class _CalendarPageState extends State<CalendarPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedStatus = newValue;
+                  print("Selected Status: $_selectedStatus");
                 });
               },
               style: TextStyle(color: Colors.black),
