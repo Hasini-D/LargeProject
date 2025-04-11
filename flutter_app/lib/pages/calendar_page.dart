@@ -13,18 +13,30 @@ class _CalendarPageState extends State<CalendarPage> {
   int _streak = 0;
   // Holds status for each day via a composite key.
   Map<String, String> _dayStatus = {};
+  // Holds user notes for each day.
+  Map<String, String> _dayNotes = {};
   int? _selectedDay;
   String? _selectedStatus; // For current day's status.
   // Simulated user goal.
   String _userGoal = "Maintain Weight";
+  // Controller for notes text field.
+  late TextEditingController _notesController;
 
   @override
   void initState() {
     super.initState();
+    _notesController = TextEditingController();
     // If the calendar's current month matches today's month, pre-select today's day.
     if (_currentMonth.month == DateTime.now().month) {
       _selectedDay = DateTime.now().day;
+      _notesController.text = _dayNotes[_dayKey(_selectedDay!)] ?? '';
     }
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
   }
 
   // Generate a unique key for each day.
@@ -79,20 +91,20 @@ class _CalendarPageState extends State<CalendarPage> {
     return months[month];
   }
 
-  // Returns the number of days in the current month.
+  // Return the number of days in the current month.
   int _daysInMonth(DateTime month) {
     return DateTime(month.year, month.month + 1, 0).day;
   }
 
-  // When a day is tapped, update selection and switch to the "To Do" tab.
-  // We now pass in the BuildContext coming from a Builder so that DefaultTabController.of(context)
-  // can find the DefaultTabController.
+  // When a day is tapped, update the selection and update notes controller;
+  // then immediately switch to the "To Do" tab.
   void _onDayTapped(BuildContext context, int day) {
     setState(() {
       _selectedDay = day;
       _selectedStatus = null;
+      _notesController.text = _dayNotes[_dayKey(day)] ?? '';
     });
-    // Switch to the "To Do" tab (Tab index 1) using the provided context.
+    // Switch to the "To Do" tab (Tab index 1).
     DefaultTabController.of(context)?.animateTo(1);
   }
 
@@ -121,7 +133,7 @@ class _CalendarPageState extends State<CalendarPage> {
     int totalCells = offset + daysInThisMonth;
 
     return Builder(
-      // Wrap in a Builder so that we obtain a context that is under DefaultTabController.
+      // Wrap in a Builder so that we can access the context below DefaultTabController.
       builder: (BuildContext context) {
         return GridView.builder(
           shrinkWrap: true,
@@ -279,7 +291,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.all(16),
-        // Styling: white background with a thin black border.
+        // White background with a thin black border.
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: Colors.black12),
@@ -343,11 +355,58 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
+  // Build the Notes tab view.
+  Widget _buildNotesTab() {
+    if (_selectedDay == null) {
+      return Center(
+        child: Text(
+          "Select a day on the Calendar tab to add/view notes.",
+          style: TextStyle(fontSize: 16, color: Colors.black),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    String displayDate = "${_monthName(_currentMonth.month)} $_selectedDay, ${_currentMonth.year}";
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Notes for $displayDate:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+          SizedBox(height: 8),
+          TextField(
+            controller: _notesController,
+            maxLines: 6,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            onChanged: (value) {
+              // Save the note for the current day.
+              if (_selectedDay != null) {
+                _dayNotes[_dayKey(_selectedDay!)] = value;
+              }
+            },
+            decoration: InputDecoration(
+              hintText: "Enter your notes here...",
+              border: OutlineInputBorder(),
+            ),
+            style: TextStyle(color: Colors.black),
+          ),
+          SizedBox(height: 8),
+          Text(
+            "Tap 'Done' on your keyboard to close it.",
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text("Fit Journey Home Page", style: TextStyle(color: Colors.black)),
@@ -361,6 +420,7 @@ class _CalendarPageState extends State<CalendarPage> {
             tabs: [
               Tab(text: "Calendar"),
               Tab(text: "To Do"),
+              Tab(text: "Notes"),
             ],
           ),
         ),
@@ -384,6 +444,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   children: [
                     _buildCalendarTab(),
                     _buildToDoTab(),
+                    _buildNotesTab(),
                   ],
                 ),
               ),
