@@ -6,6 +6,7 @@ class User {
   final String email;
   final String login;
   final String id;
+  final String? token; // Add token as an optional field
 
   User({
     required this.firstName,
@@ -13,5 +14,6 @@ class User {
     required this.email,
     required this.login,
     required this.id,
+    this.token, // Initialize token as optional
   });
 }

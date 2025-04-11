@@ -128,14 +128,16 @@ class LoginPage extends StatelessWidget {
         String email = userData['email'] ?? 'No email provided';
         String userLogin = userData['login'] ?? login;
         String id = userData['id'] ?? 'No ID provided';
+        String? token = data['token'];
 
-        Provider.of<UserProvider>(context, listen: false).setUser(
+        Provider.of<UserProvider>(context, listen: false).setUser (
           User(
             firstName: firstName,
             lastName: lastName,
             email: email,
             login: userLogin,
             id: id,
+            token: token, // Include the token here
           ),
         );
         Navigator.pushReplacementNamed(context, '/home');

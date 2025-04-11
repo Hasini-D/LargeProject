@@ -27,33 +27,10 @@ class _MyProfilePageState extends State<MyProfilePage> {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      // If we get HTML (error message), treat logout as successful.
-      if (response.body.contains('<!DOCTYPE html>') ||
-          response.body.contains('Cannot POST')) {
-        print('Received HTML response, treating logout as successful.');
-        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-        return;
-      }
-
       if (response.statusCode == 200) {
-        String message = "Logout successful";
-        try {
-          final data = jsonDecode(response.body);
-          message = data['message'] ?? message;
-        } catch (error) {
-          print("JSON decoding failed, using default success message.");
-        }
-        print('Logout successful: $message');
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       } else {
-        String errorMessage = 'Logout failed';
-        try {
-          final errorData = jsonDecode(response.body);
-          errorMessage = errorData['error'] ?? errorMessage;
-        } catch (error) {
-          errorMessage = response.body;
-        }
-        _showErrorDialog(context, errorMessage);
+        _showErrorDialog(context, 'Logout failed');
       }
     } catch (error) {
       _showErrorDialog(context, 'An error occurred: $error');
@@ -81,21 +58,30 @@ class _MyProfilePageState extends State<MyProfilePage> {
         ],
       ),
     );
+
     if (confirmDelete != true) return;
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final token = userProvider.user?.token; // Retrieve the token from the user object
+
     final url = Uri.parse('https://fitjourneyhome.com/api/delete');
+
     try {
       final response = await http.delete(url, headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Include the token in the headers
       });
+
       print("DELETE request status: ${response.statusCode}");
       print("Response body: ${response.body}");
+
       try {
         final responseData = jsonDecode(response.body);
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Account deleted successfully.')),
           );
-          Provider.of<UserProvider>(context, listen: false).clearUser();
+          userProvider.clearUser (); // Clear user data
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         } else {
           _showErrorDialog(
@@ -103,6 +89,37 @@ class _MyProfilePageState extends State<MyProfilePage> {
         }
       } catch (e) {
         _showErrorDialog(context, 'Failed to parse response: ${response.body}');
+      }
+    } catch (error) {
+      _showErrorDialog(context, 'An error occurred: $error');
+    }
+  }
+
+  Future<void> _updateInformation(BuildContext context) async {
+    final userId = Provider.of<UserProvider>(context, listen: false).user?.id;
+    final url = Uri.parse('https://fitjourneyhome.com/api/user-info');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': userId,
+          'gender': 'Not Specified', // Add gender if available
+          'height': _height,
+          'weight': _weight,
+          'age': _age,
+          'goal': _goal,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Information updated successfully.')),
+        );
+      } else {
+        final errorData = jsonDecode(response.body);
+        _showErrorDialog(context, errorData['error'] ?? 'Failed to update information');
       }
     } catch (error) {
       _showErrorDialog(context, 'An error occurred: $error');
@@ -125,7 +142,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  // Dialog for editing numeric fields (Age, Height, Weight).
   Future<void> _editNumericField({
     required BuildContext context,
     required String title,
@@ -164,7 +180,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  // Dialog for editing the Goal field.
   Future<void> _editGoal(BuildContext context) async {
     String tempGoal = _goal;
     await showDialog(
@@ -205,7 +220,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  // Helper widget for an editable field row.
   Widget _buildEditableField({
     required BuildContext context,
     required String label,
@@ -244,7 +258,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
     final user = Provider.of<UserProvider>(context).user;
     return Scaffold(
       appBar: AppBar(
-        // Use a simple title for consistency.
         title: Text("Profile Page", style: TextStyle(color: Colors.black)),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -257,7 +270,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Group all editable profile fields in a grey container.
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -273,18 +285,16 @@ class _MyProfilePageState extends State<MyProfilePage> {
               ),
               child: Column(
                 children: [
-                  // Username (read-only).
                   Row(
                     children: [
                       Icon(Icons.person, color: Colors.black),
                       SizedBox(width: 8),
-                      Text("Username:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                      Text("Username:", style : TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                       Spacer(),
                       Text(user?.login ?? '', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   SizedBox(height: 16),
-                  // Editable fields.
                   _buildEditableField(
                     context: context,
                     label: "Age",
@@ -351,12 +361,10 @@ class _MyProfilePageState extends State<MyProfilePage> {
                     },
                     icon: Icons.flag,
                   ),
-                  // New Streak field (non-editable) with flame icon.
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
                       children: [
-                        // Replace the whatshot icon with a consistent flame icon.
                         Text('🔥', style: TextStyle(fontSize: 32)),
                         SizedBox(width: 8),
                         Text("Streak:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
@@ -369,7 +377,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
               ),
             ),
             SizedBox(height: 24),
-            // Buttons: Reset Password and Log Out in one row.
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -392,6 +399,18 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
+                    onPressed: () => _updateInformation(context),
+                    child: Text("Update Information"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
                     onPressed: () => _logout(context),
                     child: Text("Log Out"),
                     style: ElevatedButton.styleFrom(
@@ -404,7 +423,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
               ],
             ),
             SizedBox(height: 16),
-            // Delete Account button.
             Center(
               child: ElevatedButton(
                 onPressed: () => _deleteAccount(context),
@@ -424,7 +442,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 }
 
-// A simple blank Reset Password page with an AppBar and a back button.
 class ResetPasswordPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
