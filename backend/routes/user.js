@@ -159,7 +159,8 @@ router.post('/user-info', async (req, res) => {
           height, 
           weight, 
           age, 
-          goal, 
+          goal,
+          streaks : 0,
           isProfileComplete: true, 
           updatedAt: new Date(), },
       },
@@ -295,6 +296,58 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+//increment streak endpoint
+router.post('/increment-streak', async (req, res) => {
+  const { userId } = req.body;
+  const db = getDB(req);
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required.' });
+  }
+
+  try {
+    const result = await db.collection('userStats').updateOne(
+      { userId: new ObjectId(userId) },
+      { $inc: { streaks: 1 } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    res.status(200).json({ message: 'Streak incremented successfully.' });
+  } catch (error) {
+    console.error('Error incrementing streak:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+//Set streak to 0
+router.post('/reset-streak', async (req, res) => {
+  const { userId } = req.body;
+  const db = getDB(req);
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required.' });
+  }
+
+  try {
+    const result = await db.collection('userStats').updateOne(
+      { userId: new ObjectId(userId) },
+      { $set: { streaks: 0 } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    res.status(200).json({ message: 'Streak reset successfully.' });
+  } catch (error) {
+    console.error('Error resetting streak:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
