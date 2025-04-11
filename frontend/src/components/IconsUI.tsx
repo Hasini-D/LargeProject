@@ -19,7 +19,7 @@ function IconUI() {
                 d="M2.25 12L11.204 3.045a1.125 1.125 0 0 1 1.591 0L21.75 12M4.5 9.75v10.125A1.125 1.125 0 0 0 5.625 21h3.375v-4.875A1.125 1.125 0 0 1 10.125 15h2.25a1.125 1.125 0 0 1 1.125 1.125V21h3.375a1.125 1.125 0 0 0 1.125-1.125V9.75" />
             </svg>
           </button>
-          {/* Calendar Button */}
+          {/* Calendar Button
           <button
             onClick={() => navigate("/calendar")}
             className="text-[#0f172a] hover:text-[#2563eb] transition"
@@ -33,8 +33,8 @@ function IconUI() {
                 0 0 1 21 7.5v11.25a2.25 2.25 0 0 1-2.25
                 2.25H5.25A2.25 2.25 0 0 1 3 18.75z" />
             </svg>
-          </button>
-          {/* Diet Button */}
+          </button> */}
+          {/* Diet Button
           <button
             onClick={() => navigate("/diet")}
             className="text-[#0f172a] hover:text-[#2563eb] transition"
@@ -54,9 +54,9 @@ function IconUI() {
                     -.27-.55-.22-1.28.28-1.64l4.23-3.03" strokeWidth="3" />
               </g>
             </svg>
-          </button>
+          </button> */}
           {/* Friends Button */}
-          <button
+          {/* <button
             onClick={() => navigate("/friends")}
             className="text-[#0f172a] hover:text-[#2563eb] transition"
           >
@@ -75,7 +75,7 @@ function IconUI() {
                   2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0
                   2.25 2.25 0 0 1 4.5 0Z" />
             </svg>
-          </button>
+          </button> */}
           {/* Profile Button */}
           <button
             onClick={() => navigate("/profile")}
