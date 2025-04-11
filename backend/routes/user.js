@@ -77,37 +77,45 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ errors });
     }
     
-    // Generate verification token & link
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationLink = `${process.env.BASE_URL}/api/verify-email?token=${verificationToken}`;
+    // Generate verification token & links
+const verificationToken = crypto.randomBytes(32).toString('hex');
+const browserVerificationLink = `${process.env.BASE_URL}/api/verify-email?token=${verificationToken}`;
+const appVerificationLink = `${process.env.BASE_URL}/api/verify-email-app?token=${verificationToken}`;
 
-    // Send verification email via Resend
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Verify Your Email",
-        html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`
-      })
-    });
+// Send verification email via Resend
+const response = await fetch("https://api.resend.com/emails", {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Verify Your Email",
+    html: `
+      <p>Click <a href="${browserVerificationLink}">here</a> to verify your email and set up your profile.</p>
+      <p>If you're using the mobile app, click <a href="${appVerificationLink}">here</a> to verify your email. After verification, please return to the app.</p>
+    `
+  })
+});
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error("Resend API Error:", data);
-      return res.status(500).json({ error: "Email sending failed. Please try again." });
-    }
+const data = await response.json();
+if (!response.ok) {
+  console.error("Resend API Error:", data);
+  return res.status(500).json({ error: "Email sending failed. Please try again." });
+}
 
-    // Add user to the database **only if email sending succeeds**
-    await db.collection('users').insertOne({
-      firstName, lastName, email, login, password,
-      isVerified: false,
-      verificationToken,
-    });
+// Add user to the database **only if email sending succeeds**
+await db.collection('users').insertOne({
+  firstName,
+  lastName,
+  email,
+  login,
+  password, // Note: Hash the password before saving
+  isVerified: false,
+  verificationToken,
+});
 
     res.status(200).json({ message: 'Registration successful! Please check your email to verify your account.' });
   } catch (error) {
@@ -167,7 +175,7 @@ router.post('/user-info', async (req, res) => {
   }
 });
 
-// Email verification endpoint
+// Email verification browser endpoint
 router.get('/verify-email', async (req, res) => {
   const token = req.query.token; // Extract token from query parameters
   const db = getDB(req);
@@ -198,6 +206,39 @@ router.get('/verify-email', async (req, res) => {
   } catch (error) {
     console.error('Verification error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+//Email Verification for app users
+router.get('/api/verify-email-app', async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const db = getDB(req);
+    const user = await db.collection('users').findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).send('Invalid or expired token.');
+    }
+
+    // Mark the user as verified
+    await db.collection('users').updateOne(
+      { verificationToken: token },
+      { $set: { isVerified: true }, $unset: { verificationToken: '' } }
+    );
+
+    // Display a message for app users
+    res.send(`
+      <html>
+        <body>
+          <h1>You have been verified!</h1>
+          <p>Please go back to the app to continue.</p>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error verifying email for app users:', error);
+    res.status(500).send('An error occurred while verifying your email.');
   }
 });
 
