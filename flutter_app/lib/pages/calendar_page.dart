@@ -1,4 +1,3 @@
-// lib/screens/calendar_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
@@ -9,21 +8,31 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> {
+  // For demonstration, the year is fixed at 2025.
   DateTime _currentMonth = DateTime(2025, DateTime.now().month, 1);
   int _streak = 0;
-  // Composite key for each day’s status.
+  // Holds status for each day via a composite key.
   Map<String, String> _dayStatus = {};
   int? _selectedDay;
-  String? _selectedStatus; // Selected status for the current day
-  // Simulated user goal; this may eventually be derived from the user’s settings.
+  String? _selectedStatus; // For current day's status.
+  // Simulated user goal.
   String _userGoal = "Maintain Weight";
 
-  // Returns a unique key for a day in the current month.
+  @override
+  void initState() {
+    super.initState();
+    // If the calendar's current month matches today's month, pre-select today's day.
+    if (_currentMonth.month == DateTime.now().month) {
+      _selectedDay = DateTime.now().day;
+    }
+  }
+
+  // Generate a unique key for each day.
   String _dayKey(int day) {
     return "${_currentMonth.year}-${_currentMonth.month}-$day";
   }
 
-  // Returns a workout plan based on the user's goal.
+  // Return a workout plan based on the user's goal.
   Map<String, String> _getWorkoutPlan() {
     if (_userGoal == "Lose Weight") {
       return {
@@ -50,27 +59,44 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
+  // Return the month name.
   String _monthName(int month) {
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return months[month];
   }
 
+  // Returns the number of days in the current month.
   int _daysInMonth(DateTime month) {
     return DateTime(month.year, month.month + 1, 0).day;
   }
 
-  // When a day is tapped, update selection.
-  void _onDayTapped(int day) {
+  // When a day is tapped, update selection and switch to the "To Do" tab.
+  // We now pass in the BuildContext coming from a Builder so that DefaultTabController.of(context)
+  // can find the DefaultTabController.
+  void _onDayTapped(BuildContext context, int day) {
     setState(() {
       _selectedDay = day;
       _selectedStatus = null;
     });
+    // Switch to the "To Do" tab (Tab index 1) using the provided context.
+    DefaultTabController.of(context)?.animateTo(1);
   }
 
-  // Confirm the selected status for a day.
+  // Confirm the selected status for the day.
   void _confirmStatus() {
     if (_selectedDay != null && _selectedStatus != null) {
       String key = _dayKey(_selectedDay!);
@@ -81,10 +107,7 @@ class _CalendarPageState extends State<CalendarPage> {
         } else if (_selectedStatus == "Missed") {
           _streak = 0;
         }
-      });
-      // Clear selection after confirmation.
-      setState(() {
-        _selectedDay = null;
+        // Keep the selected day highlighted.
         _selectedStatus = null;
       });
     }
@@ -93,242 +116,291 @@ class _CalendarPageState extends State<CalendarPage> {
   // Build calendar grid.
   Widget _buildCalendarGrid() {
     int daysInThisMonth = _daysInMonth(_currentMonth);
-    int startingWeekday =
-        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+    int startingWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
     int offset = startingWeekday % 7;
     int totalCells = offset + daysInThisMonth;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: totalCells,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
-      ),
-      itemBuilder: (context, index) {
-        if (index < offset) {
-          return Container();
-        }
-        int day = index - offset + 1;
-        bool isToday = (_currentMonth.month == DateTime.now().month &&
-            day == DateTime.now().day);
-        Color cellColor = isToday ? Colors.yellow : Colors.grey[200]!;
-        String key = _dayKey(day);
-
-        return GestureDetector(
-          onTap: () => _onDayTapped(day),
-          child: Container(
-            decoration: BoxDecoration(
-              color: cellColor,
-              border: Border.all(color: Colors.black12),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: Text(day.toString(),
-                      style: TextStyle(color: Colors.black)),
-                ),
-                // Status indicator dot if set.
-                if (_dayStatus.containsKey(key))
-                  Positioned(
-                    bottom: 4,
-                    right: 4,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _dayStatus[key] == "Worked Out"
-                            ? Colors.green
-                            : _dayStatus[key] == "Rest Day"
-                                ? Colors.grey
-                                : Colors.red,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+    return Builder(
+      // Wrap in a Builder so that we obtain a context that is under DefaultTabController.
+      builder: (BuildContext context) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: totalCells,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
           ),
+          itemBuilder: (context, index) {
+            if (index < offset) {
+              return Container();
+            }
+            int day = index - offset + 1;
+            // Highlight the cell if it is the selected day.
+            bool isSelected = (_selectedDay != null && day == _selectedDay);
+            Color cellColor = isSelected ? Colors.yellow : Colors.grey[200]!;
+            String key = _dayKey(day);
+
+            return GestureDetector(
+              onTap: () => _onDayTapped(context, day),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cellColor,
+                  border: Border.all(color: Colors.black12),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(day.toString(), style: TextStyle(color: Colors.black)),
+                    ),
+                    // Status indicator dot if set.
+                    if (_dayStatus.containsKey(key))
+                      Positioned(
+                        bottom: 4,
+                        right: 4,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _dayStatus[key] == "Worked Out"
+                                ? Colors.green
+                                : _dayStatus[key] == "Rest Day"
+                                    ? Colors.grey
+                                    : Colors.red,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  // Build the "To Do" section that appears when a day is selected.
-  Widget _buildToDoSection() {
+  // Build the Calendar tab view.
+  Widget _buildCalendarTab() {
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[200], // Grey background for calendar area.
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade400,
+              offset: Offset(0, 2),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Month navigation row.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.arrow_left, color: Colors.black),
+                  onPressed: () {
+                    setState(() {
+                      if (_currentMonth.month > 1) {
+                        _currentMonth = DateTime(2025, _currentMonth.month - 1, 1);
+                        if (_currentMonth.month == DateTime.now().month) {
+                          _selectedDay = DateTime.now().day;
+                        } else {
+                          _selectedDay = null;
+                        }
+                      }
+                    });
+                  },
+                ),
+                Text(
+                  '${_monthName(_currentMonth.month)} 2025',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                ),
+                IconButton(
+                  icon: Icon(Icons.arrow_right, color: Colors.black),
+                  onPressed: () {
+                    setState(() {
+                      if (_currentMonth.month < 12) {
+                        _currentMonth = DateTime(2025, _currentMonth.month + 1, 1);
+                        if (_currentMonth.month == DateTime.now().month) {
+                          _selectedDay = DateTime.now().day;
+                        } else {
+                          _selectedDay = null;
+                        }
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            // Days of week header.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                  .map((day) => Expanded(
+                          child: Center(
+                              child: Text(day,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black)))))
+                  .toList(),
+            ),
+            SizedBox(height: 10),
+            // Calendar grid.
+            _buildCalendarGrid(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build the To Do tab view.
+  Widget _buildToDoTab() {
     if (_selectedDay == null) {
-      return Container();
+      return Center(
+        child: Text(
+          "Select a day on the Calendar tab to view your To Do.",
+          style: TextStyle(fontSize: 16, color: Colors.black),
+          textAlign: TextAlign.center,
+        ),
+      );
     }
     Map<String, String> plan = _getWorkoutPlan();
-    String displayDate =
-        "${_monthName(_currentMonth.month)} $_selectedDay, ${_currentMonth.year}";
-    return Container(
-      padding: EdgeInsets.all(16),
-      margin: EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.blue.withOpacity(0.2),
-              blurRadius: 4,
-              offset: Offset(2, 2))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("To Do for $displayDate:",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[900])),
-          SizedBox(height: 8),
-          for (var exercise in plan.entries)
-            Text("${exercise.key}: ${exercise.value}",
-                style: TextStyle(fontSize: 16, color: Colors.black)),
-          SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              labelText: "Select Day Status",
-              border: OutlineInputBorder(),
+    String displayDate = "${_monthName(_currentMonth.month)} $_selectedDay, ${_currentMonth.year}";
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.all(16),
+        // Styling: white background with a thin black border.
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.black12),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("To Do for $displayDate:",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+            SizedBox(height: 8),
+            for (var exercise in plan.entries)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Text("${exercise.key}: ${exercise.value}",
+                    style: TextStyle(fontSize: 16, color: Colors.black)),
+              ),
+            SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: "Select Day Status",
+                border: OutlineInputBorder(),
+              ),
+              value: _selectedStatus,
+              items: const [
+                DropdownMenuItem(
+                  value: "Worked Out",
+                  child: Text("Worked Out 💪"),
+                ),
+                DropdownMenuItem(
+                  value: "Rest Day",
+                  child: Text("Rest Day 😌"),
+                ),
+                DropdownMenuItem(
+                  value: "Missed",
+                  child: Text("Missed ❌"),
+                ),
+              ],
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedStatus = newValue;
+                });
+              },
+              style: TextStyle(color: Colors.black),
             ),
-            value: _selectedStatus,
-            items: const [
-              DropdownMenuItem(
-                value: "Worked Out",
-                child: Text("Worked Out 💪"),
+            SizedBox(height: 12),
+            Center(
+              child: ElevatedButton(
+                onPressed: _confirmStatus,
+                child: Text("Confirm Status"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                ),
               ),
-              DropdownMenuItem(
-                value: "Rest Day",
-                child: Text("Rest Day 😌"),
-              ),
-              DropdownMenuItem(
-                value: "Missed",
-                child: Text("Missed ❌"),
-              ),
-            ],
-            onChanged: (newValue) {
-              setState(() {
-                _selectedStatus = newValue;
-              });
-            },
-          ),
-          SizedBox(height: 12),
-          Center(
-            child: ElevatedButton(
-              onPressed: _confirmStatus,
-              child: Text("Confirm Status"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get current user info from the provider.
     final user = Provider.of<UserProvider>(context).user;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home', style: TextStyle(color: Colors.black)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Fit Journey Home Page", style: TextStyle(color: Colors.black)),
+          backgroundColor: Colors.white,
+          iconTheme: IconThemeData(color: Colors.black),
+          elevation: 0,
+          bottom: TabBar(
+            labelColor: Colors.black,
+            unselectedLabelColor: Colors.black54,
+            indicatorColor: Colors.black,
+            tabs: [
+              Tab(text: "Calendar"),
+              Tab(text: "To Do"),
+            ],
+          ),
+        ),
         backgroundColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.black),
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                // Welcome message at the top.
-                Align(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Welcome message.
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Welcome, ${user?.login ?? 'User'}!",
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 ),
-                SizedBox(height: 16),
-                // Month navigation row.
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+              Expanded(
+                child: TabBarView(
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_left, color: Colors.black),
-                      onPressed: () {
-                        setState(() {
-                          if (_currentMonth.month > 1) {
-                            _currentMonth = DateTime(
-                                2025, _currentMonth.month - 1, 1);
-                          }
-                        });
-                      },
-                    ),
-                    Text(
-                      '${_monthName(_currentMonth.month)} 2025',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.arrow_right, color: Colors.black),
-                      onPressed: () {
-                        setState(() {
-                          if (_currentMonth.month < 12) {
-                            _currentMonth = DateTime(
-                                2025, _currentMonth.month + 1, 1);
-                          }
-                        });
-                      },
-                    ),
+                    _buildCalendarTab(),
+                    _buildToDoTab(),
                   ],
                 ),
-                SizedBox(height: 10),
-                // Days of week header.
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                      .map((day) => Expanded(
-                          child: Center(
-                              child: Text(day,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black)))))
-                      .toList(),
-                ),
-                SizedBox(height: 10),
-                // Calendar grid.
-                _buildCalendarGrid(),
-                SizedBox(height: 20),
-                // Streak counter row.
-                Row(
+              ),
+              // Larger streak counter.
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('🔥', style: TextStyle(fontSize: 24)),
+                    Text('🔥', style: TextStyle(fontSize: 32)),
                     SizedBox(width: 8),
                     Text('$_streak',
-                        style: TextStyle(fontSize: 24, color: Colors.black)),
+                        style: TextStyle(fontSize: 32, color: Colors.black, fontWeight: FontWeight.bold)),
                   ],
                 ),
-                // "To Do" section (if a day is selected).
-                _buildToDoSection(),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

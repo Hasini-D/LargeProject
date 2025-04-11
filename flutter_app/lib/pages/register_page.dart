@@ -19,14 +19,14 @@ class _RegisterPageState extends State<RegisterPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
+        title: Text('Error', style: TextStyle(color: Colors.black)),
+        content: Text(message, style: TextStyle(color: Colors.black)),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
             },
-            child: Text('OK'),
+            child: Text('OK', style: TextStyle(color: Colors.black)),
           )
         ],
       ),
@@ -41,10 +41,10 @@ class _RegisterPageState extends State<RegisterPage> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    // Validate password match
+    // Validate password match.
     if (password != confirmPassword) {
       _showErrorDialog('Passwords do not match. Please try again.');
-      return; // Exit the function if passwords do not match
+      return;
     }
 
     final url = Uri.parse('https://fitjourneyhome.com/api/register');
@@ -75,6 +75,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Consistent white background.
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -84,83 +85,116 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 SizedBox(height: 40),
                 Center(
-                  child: Text(
-                    'Fit Journey',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
+                  child: Column(
+                    children: [
+                      Icon(Icons.fitness_center, size: 64, color: Colors.black),
+                      SizedBox(height: 10),
+                      Text(
+                        'Fit Journey',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontFamily: 'Roboto', // Update in pubspec.yaml if you use a custom modern font.
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 40),
-                TextField(
-                  controller: _firstNameController,
-                  decoration: InputDecoration(
-                    labelText: 'First Name',
-                    border: OutlineInputBorder(),
+                // Grey box container for the registration form.
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade400,
+                        offset: Offset(0, 2),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _lastNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Last Name',
-                    border: OutlineInputBorder(),
-                  ),
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    border: OutlineInputBorder(),
-                  ),
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 20),
-                TextField(
-                  controller: _confirmPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  style: TextStyle(color: Colors.black),
-                ),
-                SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _register,
-                    child: Text('Continue'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _firstNameController,
+                        decoration: InputDecoration(
+                          labelText: 'First Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: _lastNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Last Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                        ),
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(),
+                        ),
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(),
+                        ),
+                        obscureText: true,
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: _confirmPasswordController,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          border: OutlineInputBorder(),
+                        ),
+                        obscureText: true,
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      SizedBox(height: 20),
+                      // "Continue" button: white background, black border, black text.
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _register,
+                          child: Text('Continue'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            side: BorderSide(color: Colors.black),
+                            padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 20),
                 Center(
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pop(context); // Go back to the login page
+                      Navigator.pop(context); // Returns to the login page.
                     },
                     child: Text('Back to Login', style: TextStyle(color: Colors.blue)),
                   ),

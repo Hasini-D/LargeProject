@@ -15,6 +15,7 @@ dependencies:
   shared_preferences: ^2.0.0 # For local storage
   flutter_secure_storage: ^5.0.0 # For securely storing sensitive data
   cupertino_icons: ^1.0.8 # For iOS style icons
+  confetti: ^0.6.0
 
 dev_dependencies:
   flutter_test:
