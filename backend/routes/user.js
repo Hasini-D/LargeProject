@@ -209,22 +209,28 @@ router.get('/verify-email', async (req, res) => {
   }
 });
 
-//Email Verification for app users
-router.get('/api/verify-email-app', async (req, res) => {
+// Email Verification for app users
+router.get('/verify-email-app', async (req, res) => {
   const { token } = req.query;
+  const db = getDB(req);
 
   try {
-    const db = getDB(req);
+    console.log("Verification token received for app:", token);
+
+    // Find user by verification token
     const user = await db.collection('users').findOne({ verificationToken: token });
 
     if (!user) {
       return res.status(400).send('Invalid or expired token.');
     }
 
-    // Mark the user as verified
+    // Update the user's verification status
     await db.collection('users').updateOne(
       { verificationToken: token },
-      { $set: { isVerified: true }, $unset: { verificationToken: '' } }
+      { 
+        $set: { isVerified: true },
+        $unset: { verificationToken: 1 }
+      }
     );
 
     // Display a message for app users
@@ -237,7 +243,7 @@ router.get('/api/verify-email-app', async (req, res) => {
       </html>
     `);
   } catch (error) {
-    console.error('Error verifying email for app users:', error);
+    console.error('Verification error for app users:', error);
     res.status(500).send('An error occurred while verifying your email.');
   }
 });
