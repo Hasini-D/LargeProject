@@ -12,6 +12,7 @@ import ProfilePage from './pages/ProfilePage';
 import VerificationPage from './pages/VerificationPage';
 import UserStatsPage from './pages/UserStatsPage';
 import ResetPassword from './components/ResetPassword';
+import MotivationPage from './pages/MotivationPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/setup-profile" element={<UserStatsPage />} />
         <Route path="/reset-password" element={<ResetPassword />} /> {/* Add the route for password reset */}
+        <Route path="/motivation" element={<MotivationPage />} /> {/* Add the route for motivation page */}
         <Route path="*" element={<Navigate to="/" />} /> {/* Redirect invalid routes to the login page */}
       </Routes>
     </Router>
