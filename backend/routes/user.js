@@ -484,4 +484,46 @@ router.get('/get-profile', async (req, res) => {
   }
 });
 
+// Leaderboard endpoint
+router.get('/leaderboard', async (req, res) => {
+  const db = getDB(req);
+
+  try {
+    // Fetch the top 5 users with the highest streaks
+    const leaderboard = await db.collection('userStats')
+      .aggregate([
+        {
+          $lookup: {
+            from: 'users', // Join with the 'users' collection
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userDetails',
+          },
+        },
+        {
+          $unwind: '$userDetails', // Flatten the joined user details
+        },
+        {
+          $sort: { streaks: -1 }, // Sort by streaks in descending order
+        },
+        {
+          $limit: 5, // Limit to the top 5 users
+        },
+        {
+          $project: {
+            _id: 0, // Exclude the MongoDB ID
+            login: '$userDetails.login', // Include the login from the 'users' collection
+            streaks: 1, // Include the streaks
+          },
+        },
+      ])
+      .toArray();
+
+    res.status(200).json(leaderboard);
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 module.exports = router;
