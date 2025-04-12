@@ -526,4 +526,42 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
+// Edit user stats endpoint
+router.patch('/update-user-stats', async (req, res) => {
+  const { userId, weight, height, age, goal } = req.body; // Extract fields from the request body
+  const db = getDB(req);
+
+  if (!userId || !ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: 'Invalid or missing user ID.' });
+  }
+
+  // Build the update object dynamically
+  const updateFields = {};
+  if (weight !== undefined) updateFields.weight = weight;
+  if (height !== undefined) updateFields.height = height;
+  if (age !== undefined) updateFields.age = age;
+  if (goal !== undefined) updateFields.goal = goal;
+
+  if (Object.keys(updateFields).length === 0) {
+    return res.status(400).json({ error: 'No fields to update.' });
+  }
+
+  try {
+    // Update the userStats document
+    const result = await db.collection('userStats').updateOne(
+      { userId: new ObjectId(userId) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'User stats not found.' });
+    }
+
+    res.status(200).json({ message: 'User stats updated successfully.' });
+  } catch (error) {
+    console.error('Error updating user stats:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 module.exports = router;
