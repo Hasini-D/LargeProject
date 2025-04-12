@@ -439,6 +439,33 @@ router.post('/reset-streak', async (req, res) => {
   }
 });
 
+// Get current streak for a user
+router.get('/streak', async (req, res) => {
+  const db = getDB(req);
+  const { userId } = req.query;
+
+  if (!userId || !ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: 'Invalid or missing user ID.' });
+  }
+
+  try {
+    const userStats = await db.collection('userStats').findOne(
+      { userId: new ObjectId(userId) },
+      { projection: { streaks: 1 } }
+    );
+
+    if (!userStats) {
+      return res.status(404).json({ error: 'User stats not found.' });
+    }
+
+    res.status(200).json({ streaks: userStats.streaks });
+  } catch (error) {
+    console.error('Error fetching streak:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 router.get('/get-profile', async (req, res) => {
   const { userId } = req.query; // Expecting userId as a query parameter
   const db = getDB(req);
