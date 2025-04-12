@@ -15,9 +15,59 @@ function CalendarUI() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dayData, setDayData] = useState<Record<string, DayStatus>>({});
   const [streak, setStreak] = useState<number>(0);
+  const [userGoal, setUserGoal] = useState("Maintain Weight");
 
   const formatDate = (date: Date) => date.toDateString();
   const selectedStatus = dayData[formatDate(selectedDate)] || "none";
+
+  // get users goal
+  useEffect(() => {
+    const fetchGoal = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch(buildPath(`api/get-profile?userId=${userId}`));
+        const data = await res.json();
+        if (res.ok && data.goal) {
+          setUserGoal(data.goal);
+        }
+      } catch (err) {
+        console.error("Failed to fetch goal:", err);
+      }
+    };
+    fetchGoal();
+  }, [userId]);
+  
+  const getWorkoutPlan = (): Record<string, string> => {
+
+    if (userGoal === "Lose weight") {
+      return {
+        "Squats": "3x10",
+        "Bench Press": "3x8",
+        "Deadlift": "3x8",
+        "Running": "3 miles",
+      };
+    } else if (userGoal === "Gain muscle") {
+      return {
+        "Squats": "4x8",
+        "Bench Press": "4x8",
+        "Deadlift": "4x8",
+        "Running": "1 mile",
+      };
+    } else {
+      // Maintain weight
+      return {
+        "Squats": "3x12",
+        "Bench Press": "3x12",
+        "Deadlift": "3x12",
+        "Running": "2 miles",
+      };
+    }
+  };
+
+  const workoutPlan = getWorkoutPlan();
+  const workoutKeys = Object.keys(workoutPlan);
+  const selectedWorkout = workoutKeys[selectedDate.getDay() % workoutKeys.length];
+  const workoutDetails = workoutPlan[selectedWorkout];
 
   // Fetch streak from database
   useEffect(() => {
@@ -120,8 +170,37 @@ function CalendarUI() {
     };
   }, []);
 
+  // more streak, more red
+  const getGradient = (streak: number): string => {
+    const clamped = Math.max(0, Math.min(streak, 30));
+  
+    // Phase 1: Blue (0) → Red (15)
+    const transitionToRed = Math.min(clamped, 15) / 15;
+    const startR = Math.floor(59 + transitionToRed * (255 - 59));   // 59 → 255
+    const startG = Math.floor(130 - transitionToRed * 130);         // 130 → 0
+    const startB = Math.floor(246 - transitionToRed * 246);         // 246 → 0
+  
+    const startColor = `rgb(${startR}, ${startG}, ${startB})`;
+  
+    // Phase 2: White (15) → Red (30)
+    const fadeWhiteToRed = clamped > 15 ? (clamped - 15) / 15 : 0;
+    const endR = 255;
+    const endG = Math.floor(255 - fadeWhiteToRed * 255);            // 255 → 0
+    const endB = Math.floor(255 - fadeWhiteToRed * 255);            // 255 → 0
+  
+    const endColor = `rgb(${endR}, ${endG}, ${endB})`;
+  
+    return `linear-gradient(to bottom right, ${startColor}, ${endColor})`;
+  };
+ 
+    
+
   return (
-    <div className="h-screen bg-gradient-to-br from-[#e0f7f4] via-[#f2fdfc] to-[#ffffff] flex flex-col">
+    <div
+    className="h-screen flex flex-col transition-all duration-500"
+    style={{ background: getGradient(streak) }}
+    >
+  
       <IconUI />
       <div className="flex flex-1 mt-24 px-8">
         <div className="w-1/3 flex justify-center items-start">
@@ -155,6 +234,20 @@ function CalendarUI() {
             ))}
           </div>
         </div>
+
+        <div className="w-1/3 pl-8">
+          <h3 className="text-2xl font-bold text-[#0f172a] mb-4">📋 To Do:</h3>
+          <p className="text-lg text-[#0f172a] mb-2">
+            <strong>Workout:</strong> {selectedWorkout} - {workoutDetails}
+          </p>
+          {selectedStatus !== "none" && (
+            <p className="text-sm text-gray-500 italic">
+              Status for {formatDate(selectedDate)}: {selectedStatus}
+            </p>
+          )}
+        </div>
+
+
       </div>
     </div>
   );
