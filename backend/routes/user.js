@@ -249,6 +249,94 @@ router.get('/verify-email-app', async (req, res) => {
   }
 });
 
+// Request password reset endpoint
+router.post('/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+  const db = getDB(req);
+
+  try {
+    // Check if the user exists
+    const user = await db.collection('users').findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Generate a reset token and expiration time
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Save the token and expiration in the database
+    await db.collection('users').updateOne(
+      { email },
+      { $set: { resetToken, resetTokenExpires } }
+    );
+
+    // Generate the reset link
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    // Send the reset email
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Password Reset Request",
+        html: `
+          <p>Click <a href="${resetLink}">here</a> to reset your password.</p>
+          <p>This link will expire in 1 hour.</p>
+        `
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("Resend API Error:", data);
+      return res.status(500).json({ error: "Failed to send reset email. Please try again." });
+    }
+
+    res.status(200).json({ message: 'Password reset email sent successfully.' });
+  } catch (error) {
+    console.error('Error requesting password reset:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Reset password endpoint
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  const db = getDB(req);
+
+  try {
+    // Find the user by reset token
+    const user = await db.collection('users').findOne({
+      resetToken: token,
+      resetTokenExpires: { $gt: new Date() }, // Ensure the token is not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired token.' });
+    }
+
+    // Save the new password directly without hashing
+    await db.collection('users').updateOne(
+      { resetToken: token },
+      {
+        $set: { password: newPassword }, // Save the plain text password
+        $unset: { resetToken: 1, resetTokenExpires: 1 }, // Remove the reset token
+      }
+    );
+
+    res.status(200).json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 // Login endpoint
 router.post('/login', async (req, res) => {
   const { login, password } = req.body;

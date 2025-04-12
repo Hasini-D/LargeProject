@@ -13,18 +13,22 @@ function ProfileUI() {
   });
   const [userId, setUserId] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const userData = localStorage.getItem("user_data");
   const user = userData ? JSON.parse(userData) : null;
-  const email = user?.email;
 
   useEffect(() => {
+    if (user) {
+      setEmail(user.email);
+    }
+
     async function fetchProfile() {
       try {
-        if (!email) return;
+        if (!user?.email) return;
 
-        const idRes = await fetch(`/api/get-user-id?email=${email}`);
+        const idRes = await fetch(`/api/get-user-id?email=${user.email}`);
         const { userId } = await idRes.json();
         setUserId(userId);
 
@@ -44,7 +48,7 @@ function ProfileUI() {
     }
 
     fetchProfile();
-  }, [email]);
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -124,13 +128,36 @@ function ProfileUI() {
     }
   };
 
+  const handleRequestPasswordReset = async () => {
+    if (!email) {
+      alert("No email associated with this account.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5001/api/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send password reset email");
+
+      alert("Password reset email sent. Please check your inbox.");
+    } catch (err) {
+      console.error("Password reset request error:", err);
+      alert("Failed to send password reset email. Please try again.");
+    }
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-[#f0f9ff] via-[#e0f7f4] to-[#ffffff] flex flex-col">
       <IconUI />
 
       <div className="flex flex-col items-center justify-start mt-24 px-6">
         <h1 className="text-4xl font-bold text-[#0f172a] mb-8">👤 Profile</h1>
-  
+
         <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md space-y-6">
           {/* Editable Fields */}
           {[
@@ -170,7 +197,7 @@ function ProfileUI() {
               )}
             </div>
           ))}
-  
+
           {/* Goal Dropdown */}
           <div className="flex flex-col">
             <label className="text-sm font-medium text-[#0f172a] mb-1">Goal</label>
@@ -205,9 +232,18 @@ function ProfileUI() {
               </div>
             )}
           </div>
-  
-          {/* Delete Button at Bottom */}
-         {/* Logout and Delete Buttons Side-by-Side */}
+
+          {/* Change Password Button */}
+          <div className="pt-4 border-t mt-6">
+            <button
+              onClick={handleRequestPasswordReset}
+              className="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded"
+            >
+              Change Password
+            </button>
+          </div>
+
+          {/* Logout and Delete Buttons Side-by-Side */}
           <div className="pt-4 border-t mt-6">
             <div className="flex justify-between gap-4">
               <button
@@ -224,11 +260,10 @@ function ProfileUI() {
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   );
-}  
+}
 
 export default ProfileUI;
