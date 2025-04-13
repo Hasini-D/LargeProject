@@ -161,6 +161,22 @@ function CalendarUI() {
         background: #3b82f6 !important;
         color: white;
       }
+
+      .react-calendar__tile.selected-date {
+        background-color: #22c55e !important;
+        color: white !important;
+        border-radius: 9999px;
+      }
+      .note-icon {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.55rem;
+      pointer-events: none;
+      }
+      .react-calendar__tile {
+      position: relative;
+      }
     `;
     document.head.appendChild(style);
     return () => {
@@ -172,7 +188,6 @@ function CalendarUI() {
   const getGradient = (streak: number): string => {
     const clamped = Math.max(0, Math.min(streak, 30));
   
-    // Phase 1: Blue to Red
     const transitionToRed = Math.min(clamped, 15) / 15;
     const startR = Math.floor(59 + transitionToRed * (255 - 59));  
     const startG = Math.floor(130 - transitionToRed * 130);       
@@ -180,7 +195,6 @@ function CalendarUI() {
   
     const startColor = `rgb(${startR}, ${startG}, ${startB})`;
   
-    // Phase 2: White to Red 
     const fadeWhiteToRed = clamped > 15 ? (clamped - 15) / 15 : 0;
     const endR = 255;
     const endG = Math.floor(255 - fadeWhiteToRed * 255);            
@@ -190,15 +204,36 @@ function CalendarUI() {
   
     return `linear-gradient(to bottom right, ${startColor}, ${endColor})`;
   };
- 
-    
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedDate = localStorage.getItem("selected_date");
+      if (storedDate) {
+        const [year, month, day] = storedDate.split("-").map(Number);
+        const newDate = new Date(year, month - 1, day);
+        setSelectedDate(newDate);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    handleStorageChange();
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+  // Sync selected date with localStorage  
+
+  const isSameDay = (d1: Date, d2: Date): boolean =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
 
   return (
     <div
-    className="h-screen flex flex-col transition-all duration-500"
-    style={{ background: getGradient(streak) }}
+      className="h-screen flex flex-col transition-all duration-500"
+      style={{ background: getGradient(streak) }}
     >
-  
       <IconUI />
       <div className="flex flex-1 mt-24 px-8">
         <div className="w-1/3 flex justify-center items-start">
@@ -206,7 +241,27 @@ function CalendarUI() {
             <h2 className="text-2xl font-semibold text-[#0f172a] mb-4 ml-2">
               Welcome, {username}
             </h2>
-            <Calendar onChange={(value) => setSelectedDate(value as Date)} value={selectedDate} />
+            <Calendar
+              onChange={(value) => {
+                const date = value as Date;
+                setSelectedDate(date);
+                localStorage.setItem("selected_date", date.toISOString().split("T")[0]);
+              }}
+              value={selectedDate}
+              tileClassName={({ date, view }) =>
+                view === "month" && isSameDay(date, selectedDate) ? "selected-date" : null
+              }
+              tileContent={({ date, view }) => {
+                if (view === "month") {
+                  const key = date.toISOString().split("T")[0];
+                  const hasNote = !!localStorage.getItem(`note-${key}`);
+                  return hasNote ? (
+                    <div className="note-icon">✏️</div>
+                  ) : null;
+                }
+                return null;
+              }}
+            />
           </div>
         </div>
 
@@ -242,7 +297,7 @@ function CalendarUI() {
                 <li key={exercise} className="text-lg">{exercise}: {detail}</li>
               ))}
             </ul>
-        </div>
+          </div>
 
           {selectedStatus !== "none" && (
             <p className="text-sm text-gray-500 italic">
@@ -250,8 +305,6 @@ function CalendarUI() {
             </p>
           )}
         </div>
-
-
       </div>
     </div>
   );
