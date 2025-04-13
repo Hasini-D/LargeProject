@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_app/models/user.dart'; // User model
-import 'package:flutter_app/providers/user_provider.dart'; // UserProvider
+import 'package:flutter_app/models/user.dart';
+import 'package:flutter_app/providers/user_stats_provider.dart';
+import 'package:flutter_app/providers/user_provider.dart';
 import 'package:flutter_app/pages/add_friend_page.dart';
 import 'package:flutter_app/pages/add_meal_page.dart';
 import 'package:flutter_app/pages/diet_page.dart';
@@ -12,7 +13,7 @@ import 'package:flutter_app/pages/email_verification_page.dart';
 import 'package:flutter_app/pages/additional_registration_page.dart';
 import 'package:flutter_app/pages/motivation_page.dart';
 import 'package:flutter_app/pages/calendar_page.dart';
-import 'package:flutter_app/pages/profile_page.dart'; // Contains MyProfilePage
+import 'package:flutter_app/pages/profile_page.dart';
 
 void main() {
   runApp(FitJourneyApp());
@@ -21,8 +22,11 @@ void main() {
 class FitJourneyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => UserProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (context) => UserStatsProvider()),
+      ],
       child: MaterialApp(
         title: 'Fit Journey',
         theme: ThemeData(
@@ -56,20 +60,17 @@ class MainTabPage extends StatefulWidget {
 }
 
 class _MainTabPageState extends State<MainTabPage> {
-  // Current selected index for bottom navigation.
   int _currentIndex = 0;
 
-  // List of pages for each tab.
   final List<Widget> _pages = [
-    CalendarPage(),    // Home tab
-    MotivationPage(),  // Motivation tab
-    MyProfilePage(),   // Profile tab
+    CalendarPage(),
+    MotivationPage(),
+    MyProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Removed the AppBar to bring content to the top.
       body: SafeArea(child: _pages[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -87,7 +88,7 @@ class _MainTabPageState extends State<MainTabPage> {
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome), // Motivation icon.
+            icon: Icon(Icons.auto_awesome),
             label: "Motivation",
           ),
           BottomNavigationBarItem(

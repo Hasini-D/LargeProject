@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class AdditionalRegistrationPage extends StatefulWidget {
   const AdditionalRegistrationPage({Key? key}) : super(key: key);
@@ -20,7 +24,6 @@ class _AdditionalRegistrationPageState extends State<AdditionalRegistrationPage>
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
-    // Show the "Email Verified" popup once the first frame is rendered.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showCongratulationsDialog();
     });
@@ -53,17 +56,76 @@ class _AdditionalRegistrationPageState extends State<AdditionalRegistrationPage>
     );
   }
 
-  void _submitAdditionalInfo() {
-    // Trigger the confetti animation.
-    _confettiController.play();
-    // Show a snackbar notification.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Additional information submitted')),
+  Future<void> _submitAdditionalInfo() async {
+    final url = Uri.parse('https://fitjourneyhome.com/api/user-info'); // Ensure this endpoint is correct
+    final userId = Provider.of<UserProvider>(context, listen: false).user?.id;
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': userId,
+          'height': int.tryParse(_heightController.text) ?? 0,
+          'weight': int.tryParse(_weightController.text) ?? 0,
+          'age': int.tryParse(_ageController.text) ?? 0,
+          'goal': _selectedGoal ?? 'Not Specified',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _confettiController.play();
+        await _resetStreak() ;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Additional information submitted successfully')),
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        });
+      } else {
+        final errorData = jsonDecode(response.body);
+        _showErrorDialog(context, errorData['error'] ?? 'Failed to submit information');
+      }
+    } catch (error) {
+      _showErrorDialog(context, 'An error occurred: $error');
+    }
+  }
+
+  Future<void> _resetStreak() async {
+    final url = Uri.parse('https://fitjourneyhome.com/api/reset-streak'); // Ensure this endpoint is correct
+    final userId = Provider.of<UserProvider>(context, listen: false).user?.id;
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'userId': userId}),
+      );
+
+      if (response.statusCode == 200) {
+      } else {
+        final errorData = jsonDecode(response.body);
+        _showErrorDialog(context, errorData['error'] ?? 'Failed to reset streak');
+      }
+    } catch (error) {
+      _showErrorDialog(context, 'An error occurred: $error');
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error', style: TextStyle(color: Colors.black)),
+        content: Text(message, style: TextStyle(color: Colors.black)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('OK', style: TextStyle(color: Colors.black)),
+          ),
+        ],
+      ),
     );
-    // Navigate to the login screen after a short delay to allow the confetti to play.
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-    });
   }
 
   @override
@@ -74,7 +136,7 @@ class _AdditionalRegistrationPageState extends State<AdditionalRegistrationPage>
           'Complete Registration',
           style: TextStyle(color: Colors.black),
         ),
-        centerTitle: true,
+        centerTitle : true,
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
         elevation: 0,
@@ -93,7 +155,6 @@ class _AdditionalRegistrationPageState extends State<AdditionalRegistrationPage>
                     style: TextStyle(fontSize: 20, color: Colors.black),
                   ),
                   const SizedBox(height: 20),
-                  // Grey box container for the additional registration form.
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -161,7 +222,6 @@ class _AdditionalRegistrationPageState extends State<AdditionalRegistrationPage>
                     ),
                   ),
                   const SizedBox(height: 30),
-                  // "Register" button styled as black with white text.
                   ElevatedButton(
                     onPressed: _submitAdditionalInfo,
                     child: const Text('Register'),
@@ -174,7 +234,6 @@ class _AdditionalRegistrationPageState extends State<AdditionalRegistrationPage>
                 ],
               ),
             ),
-            // Confetti widget overlay positioned at the top center.
             Align(
               alignment: Alignment.topCenter,
               child: ConfettiWidget(

@@ -61,7 +61,14 @@ class _RegisterPageState extends State<RegisterPage> {
         }),
       );
       if (response.statusCode == 200) {
-        Navigator.pushReplacementNamed(context, '/emailVerification');
+        Navigator.pushReplacementNamed(
+          context,
+          '/emailVerification',
+          arguments: {
+            'username': login,
+            'password': password,
+          },
+        );
       } else {
         final errorData = jsonDecode(response.body);
         final errorMessage = errorData['error'] ?? 'Registration failed';

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/user_stats_provider.dart';
 
 class MyProfilePage extends StatefulWidget {
   @override
@@ -254,8 +255,21 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    final userStats = Provider.of<UserStatsProvider>(context, listen: false).userStats;
+
+    _weight = userStats?.weight?.toInt() ?? 180; // Default weight
+    _height = userStats?.height?.toInt() ?? 70; // Default height
+    _age = userStats?.age ?? 25; // Default age
+    _goal = userStats?.goal ?? "Maintain Weight"; // Default goal
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     final user = Provider.of<UserProvider>(context).user;
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile Page", style: TextStyle(color: Colors.black)),

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../providers/user_provider.dart';
+import '../providers/user_stats_provider.dart';
 
 // ----------------------
 // ShakyIcon Widget - an easter egg for the gym app.
@@ -140,6 +141,9 @@ class LoginPage extends StatelessWidget {
             token: token, // Include the token here
           ),
         );
+        // Fetch user stats after successful login
+        await Provider.of<UserStatsProvider>(context, listen: false).fetchUserStats(id);
+
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         final errorData = jsonDecode(response.body);
@@ -173,6 +177,7 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userStats = Provider.of<UserStatsProvider>(context);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
