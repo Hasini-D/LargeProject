@@ -135,7 +135,7 @@ function ProfileUI() {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/request-password-reset", {
+      const res = await fetch((buildPath("api/reset-password")), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
