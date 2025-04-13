@@ -1,10 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Added for persistent storage
 import '../providers/user_provider.dart';
+import '../providers/user_stats_provider.dart'; // Import for user stats
 
 class CalendarPage extends StatefulWidget {
   @override
@@ -21,8 +21,6 @@ class _CalendarPageState extends State<CalendarPage> {
   Map<String, String> _dayNotes = {};
   int? _selectedDay;
   String? _selectedStatus; // For current day's status.
-  // Simulated user goal.
-  String _userGoal = "Maintain Weight";
   // Controller for notes text field.
   late TextEditingController _notesController;
 
@@ -52,15 +50,20 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   // Return a workout plan based on the user's goal.
+  // This method now uses the goal from UserStatsProvider.
   Map<String, String> _getWorkoutPlan() {
-    if (_userGoal == "Lose Weight") {
+    // Obtain the userStats from its provider; it holds the goal field.
+    final userStats = Provider.of<UserStatsProvider>(context, listen: true).userStats;
+    String userGoal = userStats?.goal ?? "Maintain Weight";
+
+    if (userGoal == "Lose Weight") {
       return {
-        "Squats": "3x10",
+        "Squats": "3x8",
         "Bench Press": "3x8",
         "Deadlift": "3x8",
         "Running": "3 miles",
       };
-    } else if (_userGoal == "Weight Gain/Muscle Build") {
+    } else if (userGoal == "Weight Gain/Muscle Build") {
       return {
         "Squats": "4x8",
         "Bench Press": "4x8",
@@ -163,7 +166,7 @@ class _CalendarPageState extends State<CalendarPage> {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${user?.token}', // Include token if needed
+          'Authorization': 'Bearer ${user?.token}',
         },
         body: json.encode({'userId': user?.id}),
       );
@@ -188,7 +191,7 @@ class _CalendarPageState extends State<CalendarPage> {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${user?.token}', // Include token if needed
+          'Authorization': 'Bearer ${user?.token}',
         },
         body: json.encode({'userId': user?.id}),
       );
@@ -221,14 +224,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      setState(() {
-        _streak = data['streaks'];
-      });
-
-      // Clear calendar data if it's a fresh login with no saved data
-      if (_streak == 0 && _dayStatus.isEmpty && _dayNotes.isEmpty) {
-        // Optionally save cleared state to SharedPreferences
-        await _saveCalendarData();
+      if (mounted) {
+        setState(() {
+          _streak = data['streaks'];
+        });
       }
     } else {
       print('Failed to fetch streak: ${response.body}');
@@ -239,17 +238,18 @@ class _CalendarPageState extends State<CalendarPage> {
 }
 
 
-
   // Load saved calendar day statuses and notes from local storage.
   Future<void> _loadCalendarData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? statusJson = prefs.getString('dayStatus');
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    String userId = user?.id.toString() ?? "default";
+    String? statusJson = prefs.getString('dayStatus_$userId');
     if (statusJson != null) {
       setState(() {
         _dayStatus = Map<String, String>.from(json.decode(statusJson));
       });
     }
-    String? notesJson = prefs.getString('dayNotes');
+    String? notesJson = prefs.getString('dayNotes_$userId');
     if (notesJson != null) {
       setState(() {
         _dayNotes = Map<String, String>.from(json.decode(notesJson));
@@ -257,11 +257,12 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-  // Save calendar day statuses and notes to local storage.
   Future<void> _saveCalendarData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('dayStatus', json.encode(_dayStatus));
-    await prefs.setString('dayNotes', json.encode(_dayNotes));
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    String userId = user?.id.toString() ?? "default";
+    await prefs.setString('dayStatus_$userId', json.encode(_dayStatus));
+    await prefs.setString('dayNotes_$userId', json.encode(_dayNotes));
   }
 
   // Build the calendar grid.
@@ -272,7 +273,6 @@ class _CalendarPageState extends State<CalendarPage> {
     int totalCells = offset + daysInThisMonth;
 
     return Builder(
-      // Wrap in a Builder so that we can access the context below DefaultTabController.
       builder: (BuildContext context) {
         return GridView.builder(
           shrinkWrap: true,
@@ -288,7 +288,6 @@ class _CalendarPageState extends State<CalendarPage> {
               return Container();
             }
             int day = index - offset + 1;
-            // Highlight the cell if it is the selected day.
             bool isSelected = (_selectedDay != null && day == _selectedDay);
             Color cellColor = isSelected ? Colors.yellow : Colors.grey[200]!;
             String key = _dayKey(day);
@@ -306,7 +305,6 @@ class _CalendarPageState extends State<CalendarPage> {
                     Center(
                       child: Text(day.toString(), style: TextStyle(color: Colors.black)),
                     ),
-                    // Status indicator dot if set.
                     if (_dayStatus.containsKey(key))
                       Positioned(
                         bottom: 4,
@@ -340,7 +338,7 @@ class _CalendarPageState extends State<CalendarPage> {
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[200], // Grey background for calendar area.
+          color: Colors.grey[200],
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -408,7 +406,6 @@ class _CalendarPageState extends State<CalendarPage> {
                   .toList(),
             ),
             SizedBox(height: 10),
-            // Calendar grid.
             _buildCalendarGrid(),
           ],
         ),
@@ -432,7 +429,6 @@ class _CalendarPageState extends State<CalendarPage> {
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.all(16),
-        // White background with a thin black border.
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: Colors.black12),
@@ -571,7 +567,6 @@ class _CalendarPageState extends State<CalendarPage> {
         body: SafeArea(
           child: Column(
             children: [
-              // Welcome message.
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Align(
@@ -591,7 +586,6 @@ class _CalendarPageState extends State<CalendarPage> {
                   ],
                 ),
               ),
-              // Streak counter display.
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Row(

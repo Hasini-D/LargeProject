@@ -16,7 +16,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
   int _height = 70;
   int _age = 25;
   String _goal = "Maintain Weight";
-  int _streak = 7; // New non-editable streak field (e.g., in days)
+  int? _streak; // Streak is now nullable, defaults to null
 
   Future<void> _logout(BuildContext context) async {
     final url = Uri.parse('https://fitjourneyhome.com/api/logout');
@@ -27,7 +27,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
       );
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.body.contains("<html")) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       } else {
@@ -63,26 +62,23 @@ class _MyProfilePageState extends State<MyProfilePage> {
     if (confirmDelete != true) return;
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final token = userProvider.user?.token; // Retrieve the token from the user object
-
+    final token = userProvider.user?.token;
     final url = Uri.parse('https://fitjourneyhome.com/api/delete');
 
     try {
       final response = await http.delete(url, headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // Include the token in the headers
+        'Authorization': 'Bearer $token',
       });
-
       print("DELETE request status: ${response.statusCode}");
       print("Response body: ${response.body}");
-
       try {
         final responseData = jsonDecode(response.body);
         if (response.statusCode == 200) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Account deleted successfully.')),
           );
-          userProvider.clearUser (); // Clear user data
+          userProvider.clearUser();
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         } else {
           _showErrorDialog(
@@ -97,30 +93,32 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   Future<void> _updateInformation(BuildContext context) async {
-    final userId = Provider.of<UserProvider>(context, listen: false).user?.id;
-    final url = Uri.parse('https://fitjourneyhome.com/api/user-info');
-
+    final userId =
+        Provider.of<UserProvider>(context, listen: false).user?.id;
+    print('Updating info without modifying streak.');
+    final url = Uri.parse('https://fitjourneyhome.com/api/update-user-stats');
     try {
-      final response = await http.post(
+      final response = await http.patch(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'userId': userId,
-          'gender': 'Not Specified', // Add gender if available
           'height': _height,
           'weight': _weight,
           'age': _age,
           'goal': _goal,
         }),
       );
-
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Information updated successfully.')),
         );
       } else {
         final errorData = jsonDecode(response.body);
-        _showErrorDialog(context, errorData['error'] ?? 'Failed to update information');
+        _showErrorDialog(
+          context,
+          errorData['error'] ?? 'Failed to update information',
+        );
       }
     } catch (error) {
       _showErrorDialog(context, 'An error occurred: $error');
@@ -258,28 +256,38 @@ class _MyProfilePageState extends State<MyProfilePage> {
   void initState() {
     super.initState();
     final userStats = Provider.of<UserStatsProvider>(context, listen: false).userStats;
-
-    _weight = userStats?.weight?.toInt() ?? 180; // Default weight
-    _height = userStats?.height?.toInt() ?? 70; // Default height
-    _age = userStats?.age ?? 25; // Default age
-    _goal = userStats?.goal ?? "Maintain Weight"; // Default goal
-
+    _weight = userStats?.weight?.toInt() ?? 180;
+    _height = userStats?.height?.toInt() ?? 70;
+    _age = userStats?.age ?? 25;
+    _goal = userStats?.goal ?? "Maintain Weight";
     _fetchStreak();
   }
+
   Future<void> _fetchStreak() async {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user == null || user.id == null) return;
+
     final url = Uri.parse('https://fitjourneyhome.com/api/streak?userId=${user.id}');
     try {
-      final response = await http.get(url, headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${user.token}',
-      });
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${user.token}',
+        },
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
-          _streak = data['streaks'];
-        });
+        int fetchedStreak = data['streaks'];
+        // Use locally cached streak if the server returns 0 but we know it shouldn’t be 0.
+        if (fetchedStreak == 0 && (_streak ?? 0) > 0) {
+          fetchedStreak = _streak!;
+        }
+        if (mounted) {
+          setState(() {
+            _streak = fetchedStreak;
+          });
+        }
       } else {
         print('Failed to fetch streak: ${response.statusCode}');
       }
@@ -290,9 +298,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-
     final user = Provider.of<UserProvider>(context).user;
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile Page", style: TextStyle(color: Colors.black)),
@@ -326,7 +332,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                     children: [
                       Icon(Icons.person, color: Colors.black),
                       SizedBox(width: 8),
-                      Text("Username:", style : TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                      Text("Username:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                       Spacer(),
                       Text(user?.login ?? '', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                     ],
@@ -406,7 +412,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
                         SizedBox(width: 8),
                         Text("Streak:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                         Spacer(),
-                        Text("$_streak days", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                        // Display a placeholder until _streak is fetched
+                        Text(
+                          _streak == null ? "Loading..." : "$_streak days",
+                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),
