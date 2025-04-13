@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/pages/profile_page.dart';
+import 'package:flutter_app/pages/reset_password_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
@@ -260,6 +262,20 @@ class LoginPage extends StatelessWidget {
                     Navigator.pushNamed(context, '/register');
                   },
                   child: Text('Register', style: TextStyle(color: Colors.black)),
+                ),
+                // Inside the LoginPage build method, add this below the Register button
+                SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {
+                    // Navigate to the Reset Password page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ResetPasswordPage(), // Pass the email if needed
+                      ),
+                    );
+                  },
+                  child: Text('Forgot Password?', style: TextStyle(color: Colors.black)),
                 ),
                 SizedBox(height: 20),
                 // Gym-inspired motivational text.

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// Model
-import 'package:flutter_app/models/user.dart';
-
 // Providers
 import 'package:flutter_app/providers/user_stats_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
@@ -21,6 +18,7 @@ import 'package:flutter_app/pages/motivation_page.dart';
 import 'package:flutter_app/pages/calendar_page.dart';
 import 'package:flutter_app/pages/profile_page.dart';
 import 'package:flutter_app/pages/leaderboard_page.dart';
+import 'package:flutter_app/pages/reset_password_page.dart';
 
 void main() {
   runApp(FitJourneyApp());
@@ -56,6 +54,7 @@ class FitJourneyApp extends StatelessWidget {
           '/newWorkoutStep1': (context) => NewWorkoutPlanStep1(),
           '/diet': (context) => DietPage(),
           '/addMeal': (context) => AddMealPage(),
+          '/resetPassword': (context) => ResetPasswordPage(),
         },
       ),
     );

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/user_stats_provider.dart';
+import 'reset_password_page.dart'; // Import the ResetPasswordPage
 
 class MyProfilePage extends StatefulWidget {
   @override
@@ -78,7 +79,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Account deleted successfully.')),
           );
-          userProvider.clearUser();
+          userProvider.clearUser ();
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         } else {
           _showErrorDialog(
@@ -267,7 +268,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user == null || user.id == null) return;
 
-    final url = Uri.parse('https://fitjourneyhome.com/api/streak?userId=${user.id}');
+    final url = Uri.parse('https://fitjourneyhome.com/api/streak? userId=${user.id}');
     try {
       final response = await http.get(
         url,
@@ -279,7 +280,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         int fetchedStreak = data['streaks'];
-        // Use locally cached streak if the server returns 0 but we know it shouldn’t be 0.
         if (fetchedStreak == 0 && (_streak ?? 0) > 0) {
           fetchedStreak = _streak!;
         }
@@ -412,7 +412,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
                         SizedBox(width: 8),
                         Text("Streak:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                         Spacer(),
-                        // Display a placeholder until _streak is fetched
                         Text(
                           _streak == null ? "Loading..." : "$_streak days",
                           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -427,22 +426,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ResetPasswordPage()),
-                      );
-                    },
-                    child: Text("Reset Password"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                  ),
-                ),
                 SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
@@ -467,6 +450,23 @@ class _MyProfilePageState extends State<MyProfilePage> {
                     ),
                   ),
                 ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ResetPasswordPage()),
+                      );
+                    },
+                    child: Text("Change Password"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                    ),
+                  ),
+                ),
               ],
             ),
             SizedBox(height: 16),
@@ -483,27 +483,6 @@ class _MyProfilePageState extends State<MyProfilePage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class ResetPasswordPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Reset Password", style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.black),
-        elevation: 0,
-      ),
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Text(
-          "Reset Password Page",
-          style: TextStyle(fontSize: 18, color: Colors.black54),
         ),
       ),
     );
