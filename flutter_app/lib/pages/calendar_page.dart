@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Added for persistent storage
 import '../providers/user_provider.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -34,6 +35,9 @@ class _CalendarPageState extends State<CalendarPage> {
       _selectedDay = DateTime.now().day;
       _notesController.text = _dayNotes[_dayKey(_selectedDay!)] ?? '';
     }
+    // Load saved calendar progress and fetch the current streak from the backend.
+    _loadCalendarData();
+    _fetchStreak();
   }
 
   @override
@@ -111,6 +115,7 @@ class _CalendarPageState extends State<CalendarPage> {
     DefaultTabController.of(context)?.animateTo(1);
   }
 
+  // Confirm status and update streak on the backend.
   void _confirmStatus() async {
     print("Confirm Status Button Pressed"); // Debugging line
     if (_selectedDay != null && _selectedStatus != null) {
@@ -119,35 +124,36 @@ class _CalendarPageState extends State<CalendarPage> {
       // Update the day status first
       setState(() {
         _dayStatus[key] = _selectedStatus!;
-        // Do not set _selectedStatus to null here
       });
 
-      // Print the selected status for debugging
-      print("Selected Status: '$_selectedStatus'"); // Debugging line
+      // Debug print the selected status.
+      print("Selected Status: '$_selectedStatus'");
 
-      // Perform the asynchronous operation outside of setState
+      // Update streak based on status.
       if (_selectedStatus!.trim() == "Worked Out") {
         _streak++;
-        print("Incrementing streak..."); // Debugging line
+        print("Incrementing streak...");
         await _incrementStreak(); // Call the increment streak function
       } else if (_selectedStatus!.trim() == "Missed") {
         _streak = 0;
-        print("Resetting streak..."); // Debugging line
+        print("Resetting streak...");
         await _resetStreak(); // Call the reset streak function
       } else {
-        print("Status did not match: '$_selectedStatus'"); // Debugging line
+        print("Status did not match: '$_selectedStatus'");
       }
 
-      // Now set _selectedStatus to null after processing
+      // Now reset selected status.
       setState(() {
-        _selectedStatus = null; // Reset the selected status after processing
+        _selectedStatus = null;
       });
+      // Save calendar changes locally.
+      await _saveCalendarData();
     } else {
-      print("Selected Day: $_selectedDay, Selected Status: $_selectedStatus"); // Debugging line
+      print("Selected Day: $_selectedDay, Selected Status: $_selectedStatus");
     }
   }
 
-// Function to increment the streak
+  // Function to increment the streak using the backend.
   Future<void> _incrementStreak() async {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     final url = Uri.parse('https://fitjourneyhome.com/api/increment-streak');
@@ -172,7 +178,7 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-// Function to reset the streak
+  // Function to reset the streak using the backend.
   Future<void> _resetStreak() async {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     final url = Uri.parse('https://fitjourneyhome.com/api/reset-streak');
@@ -197,7 +203,68 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-  // Build calendar grid.
+  // Function to fetch the current streak from the backend.
+  Future<void> _fetchStreak() async {
+  final user = Provider.of<UserProvider>(context, listen: false).user;
+  if (user == null) return;
+
+  final url = Uri.parse('https://fitjourneyhome.com/api/streak?userId=${user.id}');
+
+  try {
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${user.token}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _streak = data['streaks'];
+      });
+
+      // Clear calendar data if it's a fresh login with no saved data
+      if (_streak == 0 && _dayStatus.isEmpty && _dayNotes.isEmpty) {
+        // Optionally save cleared state to SharedPreferences
+        await _saveCalendarData();
+      }
+    } else {
+      print('Failed to fetch streak: ${response.body}');
+    }
+  } catch (error) {
+    print('Error fetching streak: $error');
+  }
+}
+
+
+
+  // Load saved calendar day statuses and notes from local storage.
+  Future<void> _loadCalendarData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? statusJson = prefs.getString('dayStatus');
+    if (statusJson != null) {
+      setState(() {
+        _dayStatus = Map<String, String>.from(json.decode(statusJson));
+      });
+    }
+    String? notesJson = prefs.getString('dayNotes');
+    if (notesJson != null) {
+      setState(() {
+        _dayNotes = Map<String, String>.from(json.decode(notesJson));
+      });
+    }
+  }
+
+  // Save calendar day statuses and notes to local storage.
+  Future<void> _saveCalendarData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('dayStatus', json.encode(_dayStatus));
+    await prefs.setString('dayNotes', json.encode(_dayNotes));
+  }
+
+  // Build the calendar grid.
   Widget _buildCalendarGrid() {
     int daysInThisMonth = _daysInMonth(_currentMonth);
     int startingWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
@@ -331,11 +398,13 @@ class _CalendarPageState extends State<CalendarPage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
                   .map((day) => Expanded(
-                          child: Center(
-                              child: Text(day,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black)))))
+                        child: Center(
+                          child: Text(day,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                        ),
+                      ))
                   .toList(),
             ),
             SizedBox(height: 10),
@@ -405,7 +474,6 @@ class _CalendarPageState extends State<CalendarPage> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedStatus = newValue;
-                  print("Selected Status: $_selectedStatus");
                 });
               },
               style: TextStyle(color: Colors.black),
@@ -452,12 +520,14 @@ class _CalendarPageState extends State<CalendarPage> {
             controller: _notesController,
             maxLines: 6,
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            onSubmitted: (_) {
+              FocusScope.of(context).unfocus();
+              _dayNotes[_dayKey(_selectedDay!)] = _notesController.text;
+              _saveCalendarData();
+            },
             onChanged: (value) {
-              // Save the note for the current day.
-              if (_selectedDay != null) {
-                _dayNotes[_dayKey(_selectedDay!)] = value;
-              }
+              _dayNotes[_dayKey(_selectedDay!)] = value;
+              _saveCalendarData();
             },
             decoration: InputDecoration(
               hintText: "Enter your notes here...",
@@ -521,7 +591,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   ],
                 ),
               ),
-              // Larger streak counter.
+              // Streak counter display.
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Row(

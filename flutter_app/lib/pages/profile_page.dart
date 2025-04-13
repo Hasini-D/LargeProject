@@ -28,7 +28,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.body.contains("<html")) {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       } else {
         _showErrorDialog(context, 'Logout failed');
@@ -194,8 +194,8 @@ class _MyProfilePageState extends State<MyProfilePage> {
             DropdownMenuItem(value: "Lose Weight", child: Text("Lose Weight")),
             DropdownMenuItem(value: "Maintain Weight", child: Text("Maintain Weight")),
             DropdownMenuItem(
-                value: "Gain Weight/Muscle Building",
-                child: Text("Gain Weight/Muscle Building")),
+                value: "Weight Gain/Muscle Build",
+                child: Text("Weight Gain/Muscle Build")),
           ],
           onChanged: (newValue) {
             if (newValue != null) tempGoal = newValue;
@@ -263,6 +263,29 @@ class _MyProfilePageState extends State<MyProfilePage> {
     _height = userStats?.height?.toInt() ?? 70; // Default height
     _age = userStats?.age ?? 25; // Default age
     _goal = userStats?.goal ?? "Maintain Weight"; // Default goal
+
+    _fetchStreak();
+  }
+  Future<void> _fetchStreak() async {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user == null || user.id == null) return;
+    final url = Uri.parse('https://fitjourneyhome.com/api/streak?userId=${user.id}');
+    try {
+      final response = await http.get(url, headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${user.token}',
+      });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _streak = data['streaks'];
+        });
+      } else {
+        print('Failed to fetch streak: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching streak: $error');
+    }
   }
 
   @override
@@ -414,7 +437,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _updateInformation(context),
-                    child: Text("Update Information"),
+                    child: Text("Update Info"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+// Model
 import 'package:flutter_app/models/user.dart';
+
+// Providers
 import 'package:flutter_app/providers/user_stats_provider.dart';
 import 'package:flutter_app/providers/user_provider.dart';
+
+// Pages
 import 'package:flutter_app/pages/add_friend_page.dart';
 import 'package:flutter_app/pages/add_meal_page.dart';
 import 'package:flutter_app/pages/diet_page.dart';
@@ -14,6 +20,7 @@ import 'package:flutter_app/pages/additional_registration_page.dart';
 import 'package:flutter_app/pages/motivation_page.dart';
 import 'package:flutter_app/pages/calendar_page.dart';
 import 'package:flutter_app/pages/profile_page.dart';
+import 'package:flutter_app/pages/leaderboard_page.dart';
 
 void main() {
   runApp(FitJourneyApp());
@@ -28,6 +35,7 @@ class FitJourneyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => UserStatsProvider()),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false, // Disable the debug banner.
         title: 'Fit Journey',
         theme: ThemeData(
           primarySwatch: Colors.blue,
@@ -60,17 +68,21 @@ class MainTabPage extends StatefulWidget {
 }
 
 class _MainTabPageState extends State<MainTabPage> {
+  // Current selected index for bottom navigation.
   int _currentIndex = 0;
 
+  // List of pages corresponding to the tabs.
   final List<Widget> _pages = [
-    CalendarPage(),
-    MotivationPage(),
-    MyProfilePage(),
+    CalendarPage(),      // Home tab
+    MotivationPage(),    // Motivation tab
+    LeaderboardPage(),   // Leaderboard tab
+    MyProfilePage(),     // Profile tab
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Display the selected page based on the current index.
       body: SafeArea(child: _pages[_currentIndex]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -90,6 +102,10 @@ class _MainTabPageState extends State<MainTabPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.auto_awesome),
             label: "Motivation",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: "Leaderboard",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
