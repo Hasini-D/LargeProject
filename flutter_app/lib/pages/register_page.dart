@@ -33,6 +33,13 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  bool _isPasswordValid(String password) {
+    final RegExp passwordRegExp = RegExp(
+      r'^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$',
+    );
+    return passwordRegExp.hasMatch(password);
+  }
+
   Future<void> _register() async {
     final firstName = _firstNameController.text;
     final lastName = _lastNameController.text;
@@ -44,6 +51,12 @@ class _RegisterPageState extends State<RegisterPage> {
     // Validate password match.
     if (password != confirmPassword) {
       _showErrorDialog('Passwords do not match. Please try again.');
+      return;
+    }
+
+    // Validate password requirements.
+    if (!_isPasswordValid(password)) {
+      _showErrorDialog('Password must be at least 8 characters long, contain a capital letter, a number, and a special character.');
       return;
     }
 
