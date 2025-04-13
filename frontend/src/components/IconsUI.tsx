@@ -29,48 +29,27 @@ function IconUI() {
           </svg>
           </button>
 
-          {/* Diet Button
+          { /* Notes Button */ }
           <button
-            onClick={() => navigate("/diet")}
+            onClick={() => navigate("/notes")}
             className="text-[#0f172a] hover:text-[#2563eb] transition"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-              viewBox="0 0 50 50" className="w-8 h-8">
-              <g>
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-                  d="M40.15 28.26c-7.05 7.05-19.72 10.58-25.36 4.94
-                    -5.64-5.64-2.1-18.31 4.94-25.36 7.05-7.05 14.94-5.8 20.58-0.16
-                    5.64 5.64 6.89 13.53-0.16 20.58Z" strokeWidth="3" />
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-                  d="M12.86 30.25l-3.02 4.23c-.36.5-1.09.55-1.64.28
-                    -.48-.24-1.02-.37-1.59-.37-1.99 0-3.61 1.62-3.61 3.61
-                    0 1.62 1.06 2.98 2.53 3.44.49.15.89.55 1.04 1.04.36 1.2 1.73 2.26
-                    3.35 2.26 1.99 0 3.61-1.62 3.61-3.61 0-.57-.13-1.11-.37-1.59
-                    -.27-.55-.22-1.28.28-1.64l4.23-3.03" strokeWidth="3" />
-              </g>
-            </svg>
-          </button> */}
-          {/* Friends Button */}
-          {/* <button
-            onClick={() => navigate("/friends")}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-8 h-8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+          </svg>
+
+          </button> 
+            
+          {/* Leaderboard Button */}
+          <button
+            onClick={() => navigate("/leaderboard")}
             className="text-[#0f172a] hover:text-[#2563eb] transition"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-              viewBox="0 0 24 24" strokeWidth="1.5"
-              stroke="currentColor" className="w-8 h-8">
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M18 18.72a9.094 9.094 0 0 0 3.741-.479
-                  3 3 0 0 0-4.682-2.72m.94 3.198v.031c0 .225-.012.447-.037.666
-                  A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584
-                  A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197
-                  m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058
-                  2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477
-                  m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0
-                  3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0
-                  2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0
-                  2.25 2.25 0 0 1 4.5 0Z" />
-            </svg>
-          </button> */}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-8 h-8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+          </svg>
+
+          </button>
           {/* Profile Button */}
           <button
             onClick={() => navigate("/profile")}

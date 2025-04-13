@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import IconUI from "./IconsUI";
-import { buildPath } from "./Path"; // Make sure buildPath handles localhost/prod
+import { buildPath } from "./Path";
 
 type DayStatus = "none" | "workout" | "rest" | "missed";
 
@@ -65,9 +65,7 @@ function CalendarUI() {
   };
 
   const workoutPlan = getWorkoutPlan();
-  const workoutKeys = Object.keys(workoutPlan);
-  const selectedWorkout = workoutKeys[selectedDate.getDay() % workoutKeys.length];
-  const workoutDetails = workoutPlan[selectedWorkout];
+  const allWorkouts = Object.entries(workoutPlan);
 
   // Fetch streak from database
   useEffect(() => {
@@ -174,19 +172,19 @@ function CalendarUI() {
   const getGradient = (streak: number): string => {
     const clamped = Math.max(0, Math.min(streak, 30));
   
-    // Phase 1: Blue (0) → Red (15)
+    // Phase 1: Blue to Red
     const transitionToRed = Math.min(clamped, 15) / 15;
-    const startR = Math.floor(59 + transitionToRed * (255 - 59));   // 59 → 255
-    const startG = Math.floor(130 - transitionToRed * 130);         // 130 → 0
-    const startB = Math.floor(246 - transitionToRed * 246);         // 246 → 0
+    const startR = Math.floor(59 + transitionToRed * (255 - 59));  
+    const startG = Math.floor(130 - transitionToRed * 130);       
+    const startB = Math.floor(246 - transitionToRed * 246);         
   
     const startColor = `rgb(${startR}, ${startG}, ${startB})`;
   
-    // Phase 2: White (15) → Red (30)
+    // Phase 2: White to Red 
     const fadeWhiteToRed = clamped > 15 ? (clamped - 15) / 15 : 0;
     const endR = 255;
-    const endG = Math.floor(255 - fadeWhiteToRed * 255);            // 255 → 0
-    const endB = Math.floor(255 - fadeWhiteToRed * 255);            // 255 → 0
+    const endG = Math.floor(255 - fadeWhiteToRed * 255);            
+    const endB = Math.floor(255 - fadeWhiteToRed * 255);        
   
     const endColor = `rgb(${endR}, ${endG}, ${endB})`;
   
@@ -236,10 +234,16 @@ function CalendarUI() {
         </div>
 
         <div className="w-1/3 pl-8">
-          <h3 className="text-2xl font-bold text-[#0f172a] mb-4">📋 To Do:</h3>
-          <p className="text-lg text-[#0f172a] mb-2">
-            <strong>Workout:</strong> {selectedWorkout} - {workoutDetails}
-          </p>
+          <h3 className="text-4xl font-bold text-[#0f172a] mb-4">📋 To Do:</h3>
+          <div className="text-3xl text-[#0f172a] mb-4">
+            <strong className="text-3xl block mb-4">  Workout Plan:</strong>
+            <ul className="list-disc ml-11 space-y-3">
+              {allWorkouts.map(([exercise, detail]) => (
+                <li key={exercise} className="text-lg">{exercise}: {detail}</li>
+              ))}
+            </ul>
+        </div>
+
           {selectedStatus !== "none" && (
             <p className="text-sm text-gray-500 italic">
               Status for {formatDate(selectedDate)}: {selectedStatus}
