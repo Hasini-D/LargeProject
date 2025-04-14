@@ -14,7 +14,7 @@ const UserInfo = () => {
 
   const email = new URLSearchParams(window.location.search).get('email');
 
-  // ✅ Fetch userId on page load
+  // Fetch userId on page load
   useEffect(() => {
     const fetchUserId = async () => {
       try {
@@ -68,7 +68,7 @@ const UserInfo = () => {
 
       if (response.ok) {
         alert('User info submitted successfully');
-        navigate('/dashboard');
+        navigate('/');
       } else {
         console.error('Error submitting user info:', data.error);
       }

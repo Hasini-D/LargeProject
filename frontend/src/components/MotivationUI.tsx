@@ -15,7 +15,9 @@ function MotivationUI() {
     "Don't count the days, make the days count!",
   ];
 
-  const [currentQuote, setCurrentQuote] = useState("Press 'Generate Quote' for inspiration!");
+  const [currentQuote, setCurrentQuote] = useState(
+    "Press 'Generate Quote' for inspiration!"
+  );
 
   const generateQuote = () => {
     const randomIndex = Math.floor(Math.random() * quotes.length);
@@ -24,22 +26,22 @@ function MotivationUI() {
 
   return (
     <div className="h-screen bg-gradient-to-br from-[#e0f7f4] via-[#f2fdfc] to-[#ffffff] flex flex-col">
-      {/* Top Navigation */}
       <IconUI />
 
-      {/* Quote Generator UI */}
       <div className="flex-1 flex flex-col items-center justify-center px-4">
-        <h1 className="text-3xl font-bold text-[#0f172a] mb-6 text-center">
+        <h1 className="text-5xl font-bold text-[#0f172a] mb-10 text-center">
           Motivational Quote Generator
         </h1>
 
-        <div className="bg-gray-200 p-6 rounded-xl shadow-md max-w-xl text-center mb-6">
-          <p className="text-lg text-[#0f172a] font-medium">{currentQuote}</p>
+        <div className="bg-gray-200 p-8 rounded-2xl shadow-md max-w-2xl text-center mb-10">
+          <p className="text-2xl text-[#0f172a] font-medium leading-relaxed">
+            “{currentQuote}”
+          </p>
         </div>
 
         <button
           onClick={generateQuote}
-          className="bg-[#0f172a] text-white px-8 py-3 rounded-lg text-lg hover:bg-[#2563eb] transition"
+          className="bg-[#0f172a] text-white px-10 py-4 rounded-xl text-xl font-semibold hover:bg-[#2563eb] transition"
         >
           Generate Quote
         </button>

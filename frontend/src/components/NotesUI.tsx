@@ -104,7 +104,10 @@ function NotesUI() {
         backgroundBlendMode: "overlay",
       }}
     >
+     <div className="w-full z-10 relative">
       <IconUI />
+     </div>
+
       
       <div className="flex-grow flex items-center justify-center w-full px-4">
         <div className="max-w-2xl w-full bg-white bg-opacity-95 rounded-2xl shadow-2xl px-8 py-10 border-4 border-[#0f172a] mt-12 mb-12">

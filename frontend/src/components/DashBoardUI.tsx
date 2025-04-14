@@ -13,12 +13,29 @@ function CalendarUI() {
   const userId = user?.id;
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [dayData, setDayData] = useState<Record<string, DayStatus>>({});
+  const storedDayData = localStorage.getItem("day_data");
+  const initialDayData = storedDayData ? JSON.parse(storedDayData) : {};
+  const [dayData, setDayData] = useState<Record<string, DayStatus>>(initialDayData);
+  
   const [streak, setStreak] = useState<number>(0);
   const [userGoal, setUserGoal] = useState("Maintain Weight");
 
   const formatDate = (date: Date) => date.toDateString();
   const selectedStatus = dayData[formatDate(selectedDate)] || "none";
+
+  //local storage for user status of each day
+  useEffect(() => {
+    const savedData = localStorage.getItem("day_data");
+    if (savedData) {
+      setDayData(JSON.parse(savedData));
+    }
+  }, []);
+  
+  useEffect(() => {
+    localStorage.setItem("day_data", JSON.stringify(dayData));
+  }, [dayData]);
+  
+
 
   // get users goal
   useEffect(() => {

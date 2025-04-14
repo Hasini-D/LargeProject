@@ -18,11 +18,8 @@ function IconUI() {
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
               Fit Journey
             </h1>
-          </div>
 
-          {/* Center: Slogan */}
-          <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 text-center">
-            <p className="text-xl md:text-2xl font-medium italic text-[#0f172a] opacity-90">
+            <p className="text-xl md:text-2xl font-medium italic text-[#0f172a] opacity-90 pl-83">
               Track. Train. Transform.
             </p>
           </div>
