@@ -268,7 +268,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user == null || user.id == null) return;
 
-    final url = Uri.parse('https://fitjourneyhome.com/api/streak? userId=${user.id}');
+    final url = Uri.parse('https://fitjourneyhome.com/api/streak?userId=${user.id}');
     try {
       final response = await http.get(
         url,
@@ -424,51 +424,57 @@ class _MyProfilePageState extends State<MyProfilePage> {
             ),
             SizedBox(height: 24),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _updateInformation(context),
-                    child: Text("Update Info"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _logout(context),
-                    child: Text("Log Out"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ResetPasswordPage()),
-                      );
-                    },
-                    child: Text("Change Password"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  children: [
+    SizedBox(width: 16),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () => _updateInformation(context),
+        child: Text("Update Info"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 15),
+        ),
+      ),
+    ),
+    SizedBox(width: 16),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () => _logout(context),
+        child: Text("Log Out"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 15),
+        ),
+      ),
+    ),
+    SizedBox(width: 16),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ResetPasswordPage()),
+          );
+        },
+        child: Center(
+          child: Text(
+            "Change Password",
+            textAlign: TextAlign.center,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 15),
+        ),
+      ),
+    ),
+  ],
+),
+
             SizedBox(height: 16),
             Center(
               child: ElevatedButton(
