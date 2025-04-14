@@ -6,23 +6,24 @@ function IconUI() {
 
   return (
     <div className="pt-4 px-4">
-      <header className="w-full bg-white shadow-md px-6 py-4 sticky top-0 z-50 border-4 border-[#0f172a] rounded-2xl">
-        <div className="flex items-center justify-between w-full">
-          {/* Left: Logo + Title */}
-          <div className="flex items-center space-x-2">
-            <img
-              src={logo}
-              alt="Fit Journey Logo"
-              className="h-10 w-10 object-contain hover:animate-pulse transition"
-            />
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
-              Fit Journey
-            </h1>
+      <header className="relative w-full bg-white shadow-md px-6 py-4 sticky top-0 z-50 border-4 border-[#0f172a] rounded-2xl">
+  {/* Centered Slogan */}
+  <p className="absolute left-1/2 top-[1.25rem] transform -translate-x-1/2 text-xl md:text-2xl font-medium italic text-[#0f172a] opacity-90 whitespace-nowrap">
+  Track. Train. Transform.
+  </p>
 
-            <p className="text-xl md:text-2xl font-medium italic text-[#0f172a] opacity-90 pl-83">
-              Track. Train. Transform.
-            </p>
-          </div>
+  <div className="flex items-center justify-between w-full">
+    {/* Left: Logo + Title */}
+    <div className="flex items-center space-x-2">
+      <img
+        src={logo}
+        alt="Fit Journey Logo"
+        className="h-10 w-10 object-contain hover:animate-pulse transition"
+      />
+      <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
+        Fit Journey
+      </h1>
+    </div>
 
           {/* Right: Icon Buttons */}
           <div className="flex items-center space-x-6">
