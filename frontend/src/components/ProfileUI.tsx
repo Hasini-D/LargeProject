@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import IconUI from "./IconsUI";
-import { buildPath } from "./Path"; // adjust path if needed
+import { buildPath } from "./Path";
+import profileBg from "../assets/profile.jpg";
 
 function ProfileUI() {
   const [formData, setFormData] = useState({
@@ -11,44 +12,39 @@ function ProfileUI() {
     age: "",
     goal: "",
   });
-  const [userId, setUserId] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const userData = localStorage.getItem("user_data");
   const user = userData ? JSON.parse(userData) : null;
+  const userId = user?.id;
 
   useEffect(() => {
-    if (user) {
-      setEmail(user.email);
-    }
+    if (!userId) return;
+    if (user?.email) setEmail(user.email);
 
-    async function fetchProfile() {
+    const fetchProfile = async () => {
       try {
-        if (!user?.email) return;
+        const response = await fetch(buildPath(`api/get-profile?userId=${userId}`));
+        const data = await response.json();
 
-        const idRes = await fetch(`/api/get-user-id?email=${user.email}`);
-        const { userId } = await idRes.json();
-        setUserId(userId);
-
-        const profileRes = await fetch(`/api/user-info/${userId}`);
-        const profileData = await profileRes.json();
+        if (!response.ok) throw new Error(data.error || "Failed to fetch profile");
 
         setFormData({
-          login: user.login,
-          weight: profileData.weight || "",
-          height: profileData.height || "",
-          age: profileData.age || "",
-          goal: profileData.goal || "",
+          login: data.login || "",
+          weight: data.weight?.toString() || "",
+          height: data.height?.toString() || "",
+          age: data.age?.toString() || "",
+          goal: data.goal || "",
         });
       } catch (err) {
         console.error("Failed to fetch profile:", err);
       }
-    }
+    };
 
     fetchProfile();
-  }, [user]);
+  }, [userId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -58,10 +54,10 @@ function ProfileUI() {
   const handleSave = async (field: string) => {
     setEditingField(null);
     try {
-      const res = await fetch("/api/user-info", {
-        method: "POST",
+      const res = await fetch(buildPath("api/update-user-stats"), {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, ...formData }),
+        body: JSON.stringify({ userId, [field]: formData[field as keyof typeof formData] }),
       });
 
       const data = await res.json();
@@ -135,7 +131,7 @@ function ProfileUI() {
     }
 
     try {
-      const res = await fetch((buildPath("api/request-password-reset")), {
+      const res = await fetch(buildPath("api/request-password-reset"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -152,33 +148,44 @@ function ProfileUI() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-[#f0f9ff] via-[#e0f7f4] to-[#ffffff] flex flex-col">
+    <div
+      className="min-h-screen bg-cover bg-center bg-fixed flex flex-col"
+      style={{
+        backgroundImage: `url(${profileBg})`,
+      }}
+    >
       <IconUI />
-
+    
       <div className="flex flex-col items-center justify-start mt-24 px-6">
-        <h1 className="text-4xl font-bold text-[#0f172a] mb-8">👤 Profile</h1>
+      <h1 className="text-4xl font-bold text-[#0f172a] mb-8">👤 Profile</h1>
 
-        <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md space-y-6">
+    
+      <div className="bg-white border-2 border-[#0f172a] shadow-lg rounded-xl p-8 w-full max-w-md space-y-6">
+          {/* Username (read-only) */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-black mb-1">Username</label>
+            <div className="bg-gray-100 px-4 py-2 rounded">
+              <span className="text-black">{formData.login}</span>
+            </div>
+          </div>
+    
           {/* Editable Fields */}
-          {[
-            { label: "Username", name: "login", type: "text" },
-            { label: "Weight (lbs)", name: "weight", type: "number" },
-            { label: "Height (inches)", name: "height", type: "number" },
-            { label: "Age", name: "age", type: "number" },
-          ].map((field) => (
-            <div key={field.name} className="flex flex-col">
-              <label className="text-sm font-medium text-[#0f172a] mb-1">{field.label}</label>
-              {editingField === field.name ? (
+          {["weight", "height", "age"].map((field) => (
+            <div key={field} className="flex flex-col">
+              <label className="text-sm font-medium text-black mb-1">
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+              </label>
+              {editingField === field ? (
                 <>
                   <input
-                    type={field.type}
-                    name={field.name}
-                    value={formData[field.name as keyof typeof formData]}
+                    type="number"
+                    name={field}
+                    value={formData[field as keyof typeof formData]}
                     onChange={handleChange}
                     className="border px-4 py-2 rounded mb-2"
                   />
                   <button
-                    onClick={() => handleSave(field.name)}
+                    onClick={() => handleSave(field)}
                     className="text-sm text-white bg-green-500 hover:bg-green-600 px-3 py-1 rounded w-fit"
                   >
                     Save
@@ -186,9 +193,9 @@ function ProfileUI() {
                 </>
               ) : (
                 <div className="flex justify-between items-center bg-gray-100 px-4 py-2 rounded">
-                  <span>{formData[field.name as keyof typeof formData]}</span>
+                  <span className="text-black">{formData[field as keyof typeof formData]}</span>
                   <button
-                    onClick={() => setEditingField(field.name)}
+                    onClick={() => setEditingField(field)}
                     className="text-blue-500 hover:underline text-sm"
                   >
                     Edit
@@ -197,10 +204,10 @@ function ProfileUI() {
               )}
             </div>
           ))}
-
+    
           {/* Goal Dropdown */}
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-[#0f172a] mb-1">Goal</label>
+            <label className="text-sm font-medium text-black mb-1">Goal</label>
             {editingField === "goal" ? (
               <>
                 <select
@@ -210,8 +217,9 @@ function ProfileUI() {
                   className="border px-4 py-2 rounded mb-2"
                 >
                   <option value="">Select a goal</option>
-                  <option value="Lose weight and build muscle">Lose weight and build muscle</option>
-                  <option value="Gain weight and build muscle">Gain weight and build muscle</option>
+                  <option value="Lose weight">Lose weight</option>
+                  <option value="Build muscle">Build muscle</option>
+                  <option value="Maintain weight">Maintain weight</option>
                 </select>
                 <button
                   onClick={() => handleSave("goal")}
@@ -222,7 +230,7 @@ function ProfileUI() {
               </>
             ) : (
               <div className="flex justify-between items-center bg-gray-100 px-4 py-2 rounded">
-                <span>{formData.goal}</span>
+                <span className="text-black">{formData.goal}</span>
                 <button
                   onClick={() => setEditingField("goal")}
                   className="text-blue-500 hover:underline text-sm"
@@ -232,7 +240,7 @@ function ProfileUI() {
               </div>
             )}
           </div>
-
+    
           {/* Change Password Button */}
           <div className="pt-4 border-t mt-6">
             <button
@@ -242,7 +250,7 @@ function ProfileUI() {
               Change Password
             </button>
           </div>
-
+    
           {/* Logout and Delete Buttons Side-by-Side */}
           <div className="pt-4 border-t mt-6">
             <div className="flex justify-between gap-4">
@@ -263,6 +271,8 @@ function ProfileUI() {
         </div>
       </div>
     </div>
+    
+
   );
 }
 

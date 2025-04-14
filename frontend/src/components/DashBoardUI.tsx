@@ -46,7 +46,7 @@ function CalendarUI() {
         "Deadlift": "3x8",
         "Running": "3 miles",
       };
-    } else if (userGoal === "Gain muscle") {
+    } else if (userGoal === "Build muscle") {
       return {
         "Squats": "4x8",
         "Bench Press": "4x8",

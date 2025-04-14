@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
 import dumbbellsImg from '../assets/dumbbells.jpg';
+import FitJourneyLogo from "../assets/FitJourneyLogo.png";
 
 function Login() {
   const [loginName, setLoginName] = useState('');
@@ -58,6 +59,14 @@ function Login() {
 >
   {/* Unified White Card */}
   <div className="relative z-10 max-w-xl mx-auto bg-white bg-opacity-95 rounded-2xl shadow-2xl px-8 py-12 mb-20 mt-20 border border-gray-200 text-center">
+    
+    {/* Logo */}
+    <img
+      src={FitJourneyLogo}
+      alt="Fit Journey Logo"
+      className="mx-auto h-20 w-20 mb-4"
+    />
+
     {/* Title + Slogan */}
     <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-[#0f172a]">Fit Journey</h1>
     <p className="text-2xl md:text-3xl font-medium mt-3 italic text-[#0f172a] opacity-90">
