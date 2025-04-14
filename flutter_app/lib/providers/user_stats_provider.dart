@@ -5,6 +5,8 @@ import '../models/user_stats.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// lib/providers/user_stats_provider.dart
+
 class UserStatsProvider with ChangeNotifier {
   UserStats? _userStats;
 
@@ -25,8 +27,18 @@ class UserStatsProvider with ChangeNotifier {
         throw Exception('Failed to load user stats');
       }
     } catch (error) {
-
       throw error; // Handle the error as needed
     }
+  }
+
+  // New method to update user stats
+  void updateUserStats(double weight, double height, int age, String goal) {
+    _userStats = UserStats(
+      weight: weight,
+      height: height,
+      age: age,
+      goal: goal,
+    );
+    notifyListeners();
   }
 }

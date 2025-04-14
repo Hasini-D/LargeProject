@@ -94,10 +94,9 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   Future<void> _updateInformation(BuildContext context) async {
-    final userId =
-        Provider.of<UserProvider>(context, listen: false).user?.id;
-    print('Updating info without modifying streak.');
+    final userId = Provider.of<UserProvider>(context, listen: false).user?.id;
     final url = Uri.parse('https://fitjourneyhome.com/api/update-user-stats');
+
     try {
       final response = await http.patch(
         url,
@@ -110,10 +109,15 @@ class _MyProfilePageState extends State<MyProfilePage> {
           'goal': _goal,
         }),
       );
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Information updated successfully.')),
         );
+
+        // Update the UserStatsProvider with new values
+        Provider.of<UserStatsProvider>(context, listen: false)
+            .updateUserStats(_weight.toDouble(), _height.toDouble(), _age, _goal);
       } else {
         final errorData = jsonDecode(response.body);
         _showErrorDialog(
